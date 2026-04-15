@@ -16,8 +16,11 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASS }}
           port:     ${{ secrets.SSH_PORT }}
+          debug: true
           script: |
-            cd ~/sites/noreaz2026.digitme.fun
-            git fetch https://github.com/Loic139/noreaz2026.git main
-            git reset --hard FETCH_HEAD
-            npm install --production
+            echo "HOME=$HOME"
+            echo "PWD=$(pwd)"
+            cd ~/sites/noreaz2026.digitme.fun && echo "CD OK" || echo "CD FAILED"
+            git fetch https://github.com/Loic139/noreaz2026.git main && echo "FETCH OK" || echo "FETCH FAILED"
+            git reset --hard FETCH_HEAD && echo "RESET OK" || echo "RESET FAILED"
+            npm install --production && echo "NPM OK" || echo "NPM FAILED"
