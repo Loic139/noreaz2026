@@ -1,4 +1,4 @@
-name: Deploy to VPS
+name: Deploy to Infomaniak
 
 on:
   push:
@@ -17,7 +17,6 @@ jobs:
           password: ${{ secrets.SSH_PASS }}
           port:     ${{ secrets.SSH_PORT }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}
+            cd /srv/customer/sites/noreaz2026.digitme.fun
             git pull origin main
             npm install --production
-            pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026
