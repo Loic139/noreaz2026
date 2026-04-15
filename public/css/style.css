@@ -1,0 +1,115 @@
+/* =========================================
+   Noréaz 2026 — DaisyUI lofi + bordeaux
+   ========================================= */
+
+/* ---- Primary color → bordeaux #8C2333 ---- */
+[data-theme="lofi"] {
+    --p: 34.5% 0.122 14.8;
+    --pc: 98% 0 0;
+    --pf: 28% 0.10 14.8;
+}
+.btn-primary           { background-color: #8C2333 !important; border-color: #8C2333 !important; color: #fff !important; }
+.btn-primary:hover     { background-color: #6B1A27 !important; border-color: #6B1A27 !important; }
+.text-primary          { color: #8C2333 !important; }
+.badge-primary         { background-color: #8C2333 !important; color: #fff !important; }
+.badge-outline.badge-primary { color: #8C2333 !important; border-color: #8C2333 !important; background: transparent !important; }
+.link-primary          { color: #8C2333 !important; }
+.border-primary        { border-color: #8C2333 !important; }
+.stroke-primary        { stroke: #8C2333 !important; }
+.bg-primary\/10        { background-color: rgba(140,35,51,.08) !important; }
+.bg-primary\/15        { background-color: rgba(140,35,51,.12) !important; }
+.bg-primary\/20        { background-color: rgba(140,35,51,.15) !important; }
+.border-primary\/20    { border-color: rgba(140,35,51,.20) !important; }
+.border-primary\/30    { border-color: rgba(140,35,51,.30) !important; }
+.text-primary\/60      { color: rgba(140,35,51,.60) !important; }
+.text-primary\/70      { color: rgba(140,35,51,.70) !important; }
+.progress-primary::-webkit-progress-value { background-color: #8C2333 !important; }
+.progress-primary::-moz-progress-bar      { background-color: #8C2333 !important; }
+
+/* ---- Fonts ---- */
+.font-oswald, h1, h2, h3, h4 { font-family: 'Oswald', sans-serif; }
+
+/* ---- Navbar (fond clair) ---- */
+.navbar { border-bottom: 1px solid #e5e7eb; }
+
+/* ---- Timer ---- */
+.timer-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid #e5e7eb;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #9ca3af;
+    background: #f9fafb;
+    transition: all .2s;
+}
+.timer-circle.urgent {
+    border-color: #ef4444;
+    color: #ef4444;
+    animation: pulse-timer .45s ease-in-out infinite alternate;
+}
+@keyframes pulse-timer {
+    from { transform: scale(1); }
+    to   { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(239,68,68,.12); }
+}
+
+/* ---- Answer Buttons ---- */
+.answer-btn {
+    width: 100%;
+    padding: .875rem 1.25rem;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: .5rem;
+    font-size: .95rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    color: #374151;
+    transition: all .15s;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.4;
+}
+.answer-btn:hover:not(:disabled) {
+    border-color: #8C2333;
+    background: rgba(140,35,51,.05);
+    color: #8C2333;
+    transform: translateX(4px);
+}
+.answer-btn.correct {
+    background: #f0fdf4;
+    border-color: #22c55e;
+    color: #16a34a;
+    font-weight: 600;
+}
+.answer-btn.wrong {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #dc2626;
+}
+.answer-btn:disabled { cursor: not-allowed; }
+
+/* ---- Score circle (light) ---- */
+#score-value {
+    background: rgba(140,35,51,.06) !important;
+    border-color: rgba(140,35,51,.2) !important;
+    color: #8C2333 !important;
+}
+
+/* ---- Lisibilité thème clair ---- */
+[data-theme="lofi"] .label-text {
+    color: #4b5563;
+}
+[data-theme="lofi"] .stat-title {
+    color: #6b7280 !important;
+}
+[data-theme="lofi"] .menu li > a {
+    color: #374151;
+}
+[data-theme="lofi"] .table th {
+    color: #6b7280;
+}

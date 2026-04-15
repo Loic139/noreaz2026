@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="lofi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Connexion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="min-h-screen flex items-center justify-center bg-base-100 px-4">
+<div class="card bg-base-200 border border-base-300 shadow-2xl w-full max-w-sm">
+  <div class="card-body p-7">
+    <h1 class="font-oswald text-3xl text-center mb-1">Administration</h1>
+    <p class="text-base-content/50 text-xs text-center mb-5">Noréaz 2026</p>
+    <% if (error && error.length) { %>
+    <div class="alert alert-error text-sm rounded-lg mb-4">
+      <span><%= error[0] %></span>
+    </div>
+    <% } %>
+    <form method="post" action="/admin/login" class="flex flex-col gap-4">
+      <label class="form-control">
+        <div class="label pb-1"><span class="label-text text-xs font-semibold uppercase tracking-widest text-base-content/60">Mot de passe admin</span></div>
+        <input type="password" name="password" required autofocus
+               class="input input-bordered bg-base-300 border-base-300 focus:border-primary focus:outline-none w-full">
+      </label>
+      <button type="submit" class="btn btn-primary w-full">Se connecter</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

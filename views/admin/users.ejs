@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="lofi">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="min-h-screen flex flex-col bg-base-100">
+
+<div class="navbar bg-base-200 border-b border-base-300 px-4 sticky top-0 z-50">
+  <div class="navbar-start">
+    <span class="font-oswald text-primary text-lg tracking-wide">ADMIN</span>
+    <span class="text-base-content/65 text-xs ml-2 hidden sm:inline">Noréaz 2026</span>
+  </div>
+  <div class="navbar-end flex gap-1">
+    <a href="/admin" class="btn btn-ghost btn-xs">Dashboard</a>
+    <a href="/admin/monuments" class="btn btn-ghost btn-xs">Monuments</a>
+    <a href="/admin/users" class="btn btn-ghost btn-xs">Joueurs</a>
+    <a href="/admin/logout" class="btn btn-ghost btn-xs text-error/60">Quitter</a>
+  </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-4 py-8 w-full flex-1">
+
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="font-oswald text-2xl">Joueurs (<%= users.length %>)</h2>
+  </div>
+
+  <% if (!users.length) { %>
+  <div class="alert bg-base-200 border border-base-300 text-sm rounded-xl">Aucun joueur inscrit.</div>
+  <% } else { %>
+  <div class="overflow-x-auto rounded-xl border border-base-300">
+    <table class="table table-zebra bg-base-200">
+      <thead>
+        <tr class="bg-base-300 text-base-content/55 text-xs uppercase tracking-widest">
+          <th>#</th><th>Joueur</th><th>E-mail</th><th>Points</th><th>Monuments</th><th>Inscrit le</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% users.forEach((u, i) => { %>
+      <tr>
+        <td class="text-base-content/50 text-sm font-bold"><%= i + 1 %></td>
+        <td class="font-semibold text-sm"><%= u.first_name %> <%= u.last_name %></td>
+        <td class="text-base-content/55 text-xs font-mono"><%= u.email %></td>
+        <td><span class="text-primary font-bold"><%= u.total_points %></span></td>
+        <td class="text-base-content/60 text-sm"><%= u.monuments_joues %></td>
+        <td class="text-base-content/50 text-xs">
+          <%= new Date(u.created_at).toLocaleDateString('fr-CH') %>
+        </td>
+        <td>
+          <div class="flex gap-1">
+            <a href="/admin/users/<%= u.id %>/reset"
+               onclick="return confirm('Remettre à zéro les scores ?')"
+               class="btn btn-ghost btn-xs text-warning/70">Reset</a>
+            <a href="/admin/users/<%= u.id %>/delete"
+               onclick="return confirm('Supprimer ce joueur ?')"
+               class="btn btn-ghost btn-xs text-error/60">Suppr.</a>
+          </div>
+        </td>
+      </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+
+</div>
+
+<footer class="footer footer-center p-4 bg-base-200 text-base-content/20 border-t border-base-300 text-xs">
+  <span>Admin — Noréaz 2026</span>
+</footer>
+</body>
+</html>

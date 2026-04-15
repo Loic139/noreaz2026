@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="lofi">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="min-h-screen flex flex-col bg-base-100">
+
+<!-- Admin navbar -->
+<div class="navbar bg-base-200 border-b border-base-300 px-4 sticky top-0 z-50">
+  <div class="navbar-start">
+    <span class="font-oswald text-primary text-lg tracking-wide">ADMIN</span>
+    <span class="text-base-content/65 text-xs ml-2 hidden sm:inline">Noréaz 2026</span>
+  </div>
+  <div class="navbar-end flex gap-1">
+    <a href="/admin" class="btn btn-ghost btn-xs">Dashboard</a>
+    <a href="/admin/monuments" class="btn btn-ghost btn-xs">Monuments</a>
+    <a href="/admin/users" class="btn btn-ghost btn-xs">Joueurs</a>
+    <a href="/admin/logout" class="btn btn-ghost btn-xs text-error/60">Quitter</a>
+  </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-4 py-8 w-full flex-1">
+
+  <!-- Stats -->
+  <div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="stat bg-base-200 rounded-xl border border-base-300">
+      <div class="stat-title text-xs uppercase tracking-widest">Monuments</div>
+      <div class="stat-value text-primary text-3xl"><%= stats.monuments %></div>
+    </div>
+    <div class="stat bg-base-200 rounded-xl border border-base-300">
+      <div class="stat-title text-xs uppercase tracking-widest">Joueurs</div>
+      <div class="stat-value text-primary text-3xl"><%= stats.users %></div>
+    </div>
+    <div class="stat bg-base-200 rounded-xl border border-base-300">
+      <div class="stat-title text-xs uppercase tracking-widest">Points joués</div>
+      <div class="stat-value text-primary text-3xl"><%= stats.scores %></div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- QR Codes -->
+    <div>
+      <h2 class="font-oswald text-xl mb-3">QR Codes</h2>
+      <div class="card bg-base-200 border border-base-300">
+        <div class="card-body p-4 divide-y divide-base-300">
+        <% monumentList.forEach(m => { %>
+        <div class="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+          <img src="<%= qrCodes[m.id] %>" alt="QR" class="w-16 h-16 rounded-lg flex-shrink-0">
+          <div class="min-w-0">
+            <p class="font-semibold text-sm truncate"><%= m.name %></p>
+            <p class="text-base-content/50 text-xs truncate font-mono">/monument?token=<%= m.qr_token.substring(0,16) %>…</p>
+            <span class="badge badge-xs mt-1 <%= m.active ? 'badge-success' : 'badge-error' %>">
+              <%= m.active ? 'Actif' : 'Inactif' %>
+            </span>
+          </div>
+        </div>
+        <% }) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classement -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-oswald text-xl">Classement</h2>
+        <a href="/admin/users" class="btn btn-ghost btn-xs text-base-content/60">Voir tout →</a>
+      </div>
+      <% if (!ranking.length) { %>
+        <div class="alert bg-base-200 border border-base-300 text-sm">Aucun score.</div>
+      <% } else { %>
+      <div class="overflow-x-auto rounded-xl border border-base-300">
+        <table class="table table-zebra bg-base-200 table-sm">
+          <thead><tr class="bg-base-300 text-base-content/55 text-xs uppercase tracking-widest"><th>#</th><th>Joueur</th><th>Points</th></tr></thead>
+          <tbody>
+          <% ranking.forEach((r, i) => { %>
+          <tr>
+            <td><% if(i===0){%>🥇<%}else if(i===1){%>🥈<%}else if(i===2){%>🥉<%}else{%><%= i+1 %><%}%></td>
+            <td><%= r.first_name %> <%= r.last_name %></td>
+            <td class="text-primary font-bold"><%= r.total %></td>
+          </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer footer-center p-4 bg-base-200 text-base-content/20 border-t border-base-300 text-xs">
+  <span>Admin — Noréaz 2026</span>
+</footer>
+</body>
+</html>

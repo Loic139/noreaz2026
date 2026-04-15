@@ -1,0 +1,57 @@
+<%- include('layouts/header') %>
+
+<div class="flex justify-center px-4 py-12">
+<div class="card bg-base-200 border border-base-300 shadow-2xl w-full max-w-sm">
+  <div class="card-body items-center text-center gap-3 p-7">
+
+    <div class="badge badge-success badge-lg font-semibold tracking-wide px-4">✓ Monument trouvé !</div>
+
+    <% if (monument.image) { %>
+    <figure class="mt-2">
+      <img src="/img/monuments/<%= monument.image %>" alt="<%= monument.name %>"
+           class="w-36 h-36 object-contain rounded-2xl shadow-xl">
+    </figure>
+    <% } else { %>
+    <div class="w-32 h-32 bg-base-300 rounded-2xl flex items-center justify-center text-5xl mt-2 shadow">🏛️</div>
+    <% } %>
+
+    <h1 class="font-oswald text-3xl text-primary mt-1 leading-tight"><%= monument.name %></h1>
+    <% if (monument.country) { %><p class="text-primary/70 font-semibold text-sm -mt-1">📍 <%= monument.country %></p><% } %>
+    <% if (monument.description) { %><p class="text-base-content/60 text-sm max-w-xs leading-relaxed"><%= monument.description %></p><% } %>
+
+    <% if (alreadyPlayed) { %>
+    <div class="alert bg-base-300 border-0 text-sm w-full rounded-xl mt-1">
+      <span>Tu as déjà joué ! Score : <strong class="text-primary"><%= existingScore.points %> point(s)</strong></span>
+    </div>
+    <div class="flex flex-col w-full gap-2 mt-2">
+      <a href="/leaderboard" class="btn btn-primary w-full">Voir le classement</a>
+      <a href="/" class="btn btn-ghost w-full">Retour à l'accueil</a>
+    </div>
+
+    <% } else { %>
+    <p class="text-base-content/50 text-xs mt-1">5 questions · <%= QUIZ_TIMER %>s · 1 pt / bonne réponse</p>
+    <div class="flex flex-col w-full gap-2 mt-2">
+      <% if (user) { %>
+      <a href="/quiz?token=<%= encodeURIComponent(token) %>" class="btn btn-primary w-full">
+        🎯 Lancer le quiz (classement)
+      </a>
+      <% } else { %>
+      <a href="/quiz?token=<%= encodeURIComponent(token) %>&mode=anon" class="btn btn-primary w-full">
+        🎯 Jouer anonymement
+      </a>
+      <a href="/auth/login?redirect=<%= encodeURIComponent('/monument?token=' + token) %>" class="btn btn-success w-full">
+        🏆 Se connecter pour le classement
+      </a>
+      <a href="/auth/register?redirect=<%= encodeURIComponent('/monument?token=' + token) %>"
+         class="text-base-content/50 text-xs hover:text-primary transition-colors mt-1">
+        Pas encore de compte ? S'inscrire
+      </a>
+      <% } %>
+    </div>
+    <% } %>
+
+  </div>
+</div>
+</div>
+
+<%- include('layouts/footer') %>

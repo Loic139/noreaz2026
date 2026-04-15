@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="lofi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Noréaz 2026 — Les Monuments' %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="min-h-screen flex flex-col">
+
+<div class="navbar bg-base-200 border-b border-base-300 sticky top-0 z-50 px-4">
+  <div class="navbar-start">
+    <div class="dropdown">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-sm lg:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
+        </svg>
+      </div>
+      <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-2xl bg-base-100 rounded-box w-48 border border-base-300">
+        <li><a href="/">Accueil</a></li>
+        <li><a href="/leaderboard">Classement</a></li>
+        <% if (user) { %>
+        <li class="menu-title opacity-40 text-xs"><%= user.first_name %></li>
+        <li><a href="/auth/logout" class="text-error">Déconnexion</a></li>
+        <% } else { %>
+        <li><a href="/auth/login">Se connecter</a></li>
+        <li><a href="/auth/register">S'inscrire</a></li>
+        <% } %>
+      </ul>
+    </div>
+    <a href="/" class="flex flex-col leading-none ml-1 hover:opacity-80 transition-opacity">
+      <span class="font-oswald text-xl font-bold text-primary tracking-wider">NORÉAZ</span>
+      <span class="text-[.58rem] text-base-content/65 font-semibold tracking-[.2em] uppercase">Les Monuments 2026</span>
+    </a>
+  </div>
+  <div class="navbar-end hidden lg:flex gap-1">
+    <a href="/" class="btn btn-ghost btn-sm font-medium">Accueil</a>
+    <a href="/leaderboard" class="btn btn-ghost btn-sm font-medium">Classement</a>
+    <div class="divider divider-horizontal mx-1"></div>
+    <% if (user) { %>
+    <span class="text-base-content/55 text-sm self-center px-2 font-medium"><%= user.first_name %></span>
+    <a href="/auth/logout" class="btn btn-ghost btn-sm text-error/60 hover:text-error">Déconnexion</a>
+    <% } else { %>
+    <a href="/auth/login" class="btn btn-ghost btn-sm font-medium">Se connecter</a>
+    <a href="/auth/register" class="btn btn-primary btn-sm ml-1">S'inscrire</a>
+    <% } %>
+  </div>
+</div>
+
+<main class="flex-1">

@@ -1,0 +1,7 @@
+node_modules/
+.env
+public/img/monuments/*.jpg
+public/img/monuments/*.png
+public/img/monuments/*.webp
+*.log
+.DS_Store
