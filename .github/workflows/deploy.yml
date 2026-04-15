@@ -17,6 +17,7 @@ jobs:
           password: ${{ secrets.SSH_PASS }}
           port:     ${{ secrets.SSH_PORT }}
           script: |
-            cd /srv/customer/sites/noreaz2026.digitme.fun
-            git pull origin main
+            cd ~/sites/noreaz2026.digitme.fun
+            git fetch https://github.com/Loic139/noreaz2026.git main
+            git reset --hard FETCH_HEAD
             npm install --production
