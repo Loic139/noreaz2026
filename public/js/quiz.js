@@ -104,6 +104,13 @@
         });
         if (!isCorrect) btn.classList.add('wrong');
 
+        // Flash du fond de la carte
+        const card = answersEl.closest('.card');
+        if (card) {
+            card.classList.add(isCorrect ? 'flash-correct' : 'flash-wrong');
+            setTimeout(() => card.classList.remove('flash-correct', 'flash-wrong'), 500);
+        }
+
         if (isCorrect) {
             score++;
         }
