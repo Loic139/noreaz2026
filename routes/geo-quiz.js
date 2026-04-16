@@ -31,6 +31,7 @@ router.get('/', async (req, res) => {
         monument,
         token,
         bestScore,
+        alreadyPlayed: !!bestScore,
     });
 });
 

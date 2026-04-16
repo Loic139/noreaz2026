@@ -21,6 +21,8 @@
 .bg-primary\/20        { background-color: rgba(140,35,51,.15) !important; }
 .border-primary\/20    { border-color: rgba(140,35,51,.20) !important; }
 .border-primary\/30    { border-color: rgba(140,35,51,.30) !important; }
+.btn-outline.btn-primary { background: transparent !important; border-color: #8C2333 !important; color: #8C2333 !important; }
+.btn-outline.btn-primary:hover { background-color: #8C2333 !important; color: #fff !important; }
 .text-primary\/60      { color: rgba(140,35,51,.60) !important; }
 .text-primary\/70      { color: rgba(140,35,51,.70) !important; }
 .progress-primary::-webkit-progress-value { background-color: #8C2333 !important; }

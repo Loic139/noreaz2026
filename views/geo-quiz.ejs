@@ -12,21 +12,34 @@
     <p class="text-base-content/55 text-sm mt-1">Où se trouve ce monument dans le monde ?</p>
   </div>
 
-  <% if (bestScore) { %>
-  <div class="alert bg-base-200 border border-base-300 text-sm mb-4">
-    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-primary shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <span>Meilleure tentative : <strong class="text-primary"><%= bestScore.distance_km.toLocaleString('fr-CH') %> km</strong> · <strong class="text-primary"><%= bestScore.points %>/5 pts</strong> — Rejoue pour faire mieux !</span>
-  </div>
-  <% } %>
+  <% if (alreadyPlayed) { %>
+  <!-- Déjà joué : affiche le résultat sans carte -->
+  <div class="card bg-base-200 border border-base-300 shadow-xl">
+    <div class="card-body items-center text-center gap-3 p-6">
+      <p class="text-base-content/50 text-sm">Tu as déjà utilisé ta tentative pour ce monument.</p>
 
+      <p class="font-oswald text-2xl"><%= bestScore.distance_km.toLocaleString('fr-CH') %> km de distance</p>
+
+      <div class="w-28 h-28 rounded-full flex items-center justify-center
+                  bg-primary/10 border-4 border-primary/25
+                  font-oswald text-3xl font-bold text-primary">
+        <%= bestScore.points %> / 5
+      </div>
+
+      <div class="flex flex-col w-full gap-2 mt-2">
+        <a href="/leaderboard" class="btn btn-primary w-full">Voir le classement</a>
+        <a href="/monument?token=<%= encodeURIComponent(token) %>" class="btn btn-ghost w-full">Retour au monument</a>
+      </div>
+    </div>
+  </div>
+
+  <% } else { %>
   <!-- Instructions -->
   <div id="instructions" class="alert bg-primary/10 border border-primary/20 text-sm mb-4">
     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-primary shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>
-    <span>Clique sur la carte pour placer <strong><%= monument.name %></strong>, puis confirme ta position.</span>
+    <span>Clique sur la carte pour placer <strong><%= monument.name %></strong>, puis confirme. <strong>Une seule tentative !</strong></span>
   </div>
 
   <!-- Carte Leaflet -->
@@ -77,6 +90,7 @@
       </div>
     </div>
   </div>
+  <% } %>
 
 </div>
 
