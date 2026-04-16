@@ -11,25 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Copier les fichiers via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASS }}
-          port:     ${{ secrets.SSH_PORT }}
-          source: "app.js,config,middleware,public,routes,views,package.json,package-lock.json,sql"
-          target: ${{ secrets.DEPLOY_PATH }}
-          strip_components: 0
-
-      - name: Installer les dépendances et redémarrer l'app
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASS }}
-          port:     ${{ secrets.SSH_PORT }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            npm install --production
-            pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026
+      - name: Déclencher le déploiement Infomaniak
+        run: |
+          curl -f -X POST "${{ secrets.INFOMANIAK_DEPLOY_HOOK }}"
