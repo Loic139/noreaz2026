@@ -67,6 +67,32 @@ router.post('/register', async (req, res) => {
     res.redirect(redirect);
 });
 
+// GET profile
+router.get('/profile', (req, res) => {
+    if (!req.session.user) return res.redirect('/auth/login');
+    res.render('profile', { pageTitle: 'Mon profil — Noréaz 2026' });
+});
+
+// POST profile
+router.post('/profile', async (req, res) => {
+    if (!req.session.user) return res.redirect('/auth/login');
+    const { first_name, last_name } = req.body;
+
+    if (!first_name || !last_name) {
+        req.flash('error', 'Prénom et nom sont obligatoires.');
+        return res.redirect('/auth/profile');
+    }
+
+    await db.query(
+        'UPDATE users SET first_name = ?, last_name = ? WHERE id = ?',
+        [first_name, last_name, req.session.user.id]
+    );
+    req.session.user.first_name = first_name;
+    req.session.user.last_name  = last_name;
+    req.flash('success', 'Profil mis à jour.');
+    res.redirect('/auth/profile');
+});
+
 // GET logout
 router.get('/logout', (req, res) => {
     req.session.destroy();
