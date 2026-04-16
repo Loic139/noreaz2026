@@ -20,7 +20,8 @@ jobs:
           port:     ${{ secrets.SSH_PORT }}
           script: |
             set -ex
-            cd /srv/customer
-            curl -fSL https://github.com/Loic139/noreaz2026/archive/refs/heads/main.tar.gz | tar xz --strip-components=1
+            curl -fSL -o /tmp/noreaz2026.tar.gz https://github.com/Loic139/noreaz2026/archive/refs/heads/main.tar.gz
+            tar xz --strip-components=1 -C /srv/customer -f /tmp/noreaz2026.tar.gz
+            rm /tmp/noreaz2026.tar.gz
             npm install --production --prefix /srv/customer
             pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026 --cwd /srv/customer
