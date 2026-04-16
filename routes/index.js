@@ -4,7 +4,7 @@ const db      = require('../config/db');
 
 router.get('/', async (req, res) => {
     const [monuments] = await db.query(
-        'SELECT id, name, country, description, image, hint FROM monuments WHERE active = 1 ORDER BY id'
+        'SELECT id, name, country, description, image, hint, qr_token FROM monuments WHERE active = 1 ORDER BY id'
     );
 
     const [top5] = await db.query(

@@ -20,7 +20,16 @@ router.get('/', async (req, res) => {
             'SELECT points FROM scores WHERE user_id = ? AND monument_id = ?',
             [req.session.user.id, monument.id]
         );
-        if (s.length) { alreadyPlayed = true; existingScore = s[0]; }
+        if (s.length) {
+            existingScore = s[0];
+            alreadyPlayed = s[0].points > 0; // quiz complété avec des points
+        } else {
+            // Visite = monument trouvé, même sans quiz
+            await db.query(
+                'INSERT INTO scores (user_id, monument_id, points) VALUES (?, ?, 0)',
+                [req.session.user.id, monument.id]
+            );
+        }
     }
 
     res.render('monument', {

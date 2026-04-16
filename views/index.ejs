@@ -63,7 +63,8 @@
   <% const found = user && foundIds.includes(m.id); %>
 
     <% if (found) { %>
-    <div class="card bg-base-200 border border-success/15 shadow-md hover:-translate-y-1 transition-transform duration-200">
+    <a href="/monument?token=<%= encodeURIComponent(m.qr_token) %>"
+       class="card bg-base-200 border border-success/15 shadow-md hover:-translate-y-1 transition-transform duration-200 cursor-pointer">
       <% if (m.image) { %>
       <figure class="h-44 overflow-hidden">
         <img src="/img/monuments/<%= m.image %>" alt="<%= m.name %>" class="w-full h-full object-cover">
@@ -75,8 +76,9 @@
         <div class="badge badge-success badge-sm font-semibold">✓ Trouvé</div>
         <h3 class="card-title font-oswald text-base mt-1"><%= m.name %></h3>
         <% if (m.country) { %><p class="text-primary text-xs font-semibold">📍 <%= m.country %></p><% } %>
+        <p class="text-xs text-base-content/40 mt-1">Cliquer pour rejouer →</p>
       </div>
-    </div>
+    </a>
 
     <% } else { %>
     <div class="card bg-base-200 border border-base-300 shadow-md hover:-translate-y-1 transition-transform duration-200">

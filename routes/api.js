@@ -27,15 +27,23 @@ router.post('/save-score', async (req, res) => {
     if (!m.length) return res.status(404).json({ error: 'Monument introuvable' });
 
     const [existing] = await db.query(
-        'SELECT id FROM scores WHERE user_id=? AND monument_id=?',
+        'SELECT id, points FROM scores WHERE user_id=? AND monument_id=?',
         [req.session.user.id, mid]
     );
-    if (existing.length) return res.json({ status: 'already_played' });
+    if (existing.length && existing[0].points > 0) return res.json({ status: 'already_played' });
 
-    await db.query(
-        'INSERT INTO scores (user_id, monument_id, points) VALUES (?,?,?)',
-        [req.session.user.id, mid, pts]
-    );
+    if (existing.length) {
+        // Mise à jour de la visite (points=0) avec le vrai score
+        await db.query(
+            'UPDATE scores SET points=?, completed_at=NOW() WHERE user_id=? AND monument_id=?',
+            [pts, req.session.user.id, mid]
+        );
+    } else {
+        await db.query(
+            'INSERT INTO scores (user_id, monument_id, points) VALUES (?,?,?)',
+            [req.session.user.id, mid, pts]
+        );
+    }
     res.json({ status: 'ok', points: pts });
 });
 
