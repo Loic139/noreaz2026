@@ -13,11 +13,14 @@ router.get('/', async (req, res) => {
          GROUP BY s.user_id ORDER BY total DESC LIMIT 5`
     );
 
-    const [comments] = await db.query(
-        `SELECT c.id, c.content, c.created_at, u.first_name, u.last_name
-         FROM comments c JOIN users u ON u.id = c.user_id
-         ORDER BY c.created_at DESC LIMIT 50`
-    );
+    let comments = [];
+    try {
+        [comments] = await db.query(
+            `SELECT c.id, c.content, c.created_at, u.first_name, u.last_name
+             FROM comments c JOIN users u ON u.id = c.user_id
+             ORDER BY c.created_at DESC LIMIT 50`
+        );
+    } catch (_) { /* table pas encore créée */ }
 
     let foundIds = [];
     if (req.session.user) {
