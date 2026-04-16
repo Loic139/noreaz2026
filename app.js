@@ -3,6 +3,7 @@ const express       = require('express');
 const session       = require('express-session');
 const flash         = require('connect-flash');
 const path          = require('path');
+const { version }   = require('./package.json');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use((req, res, next) => {
     res.locals.APP_URL      = process.env.APP_URL || 'http://localhost:3000';
     res.locals.QUIZ_TIMER    = parseInt(process.env.QUIZ_TIMER)    || 10;
     res.locals.QUIZ_QUESTIONS = parseInt(process.env.QUIZ_QUESTIONS) || 5;
+    res.locals.APP_VERSION   = version;
     next();
 });
 
