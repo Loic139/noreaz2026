@@ -21,10 +21,12 @@
     const answersEl    = document.getElementById('answers-list');
     const progressFill = document.getElementById('progress-fill');
     const progressLbl  = document.getElementById('progress-label');
-    const quizSection  = document.getElementById('quiz-section');
-    const resultSection= document.getElementById('result-section');
-    const scoreEl      = document.getElementById('score-value');
-    const resultMsg    = document.getElementById('result-message');
+    const quizSection   = document.getElementById('quiz-section');
+    const resultSection = document.getElementById('result-section');
+    const scoreEl       = document.getElementById('score-value');
+    const resultMsg     = document.getElementById('result-message');
+    const nextBtnWrapper= document.getElementById('next-btn-wrapper');
+    const nextBtn       = document.getElementById('next-btn');
 
     // Données injectées par PHP
     const questions = window.QUIZ_DATA || [];
@@ -32,6 +34,12 @@
     function init() {
         if (!quizSection || questions.length === 0) return;
         totalQuestions = questions.length;
+        if (nextBtn) nextBtn.addEventListener('click', () => {
+            if (nextBtnWrapper) nextBtnWrapper.style.display = 'none';
+            const next = currentQuestion + 1;
+            if (next >= totalQuestions) showResult();
+            else showQuestion(next);
+        });
         showQuestion(0);
     }
 
@@ -98,7 +106,12 @@
         if (isCorrect) {
             score++;
         }
-        setTimeout(() => showQuestion(currentQuestion + 1), 1000);
+
+        const isLast = currentQuestion + 1 >= totalQuestions;
+        if (nextBtnWrapper) {
+            nextBtnWrapper.style.display = 'block';
+            if (nextBtn) nextBtn.textContent = isLast ? 'Voir le résultat →' : 'Question suivante →';
+        }
     }
 
     function startTimer() {
@@ -119,7 +132,11 @@
                         b.disabled = true;
                         if (b.dataset.correct === '1') b.classList.add('correct');
                     });
-                    setTimeout(() => showResult(), 1000);
+                    const isLast = currentQuestion + 1 >= totalQuestions;
+                    if (nextBtnWrapper) {
+                        nextBtnWrapper.style.display = 'block';
+                        if (nextBtn) nextBtn.textContent = isLast ? 'Voir le résultat →' : 'Question suivante →';
+                    }
                 }
             }
         }, 1000);
