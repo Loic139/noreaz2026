@@ -11,26 +11,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Copier les fichiers vers le serveur (SCP)
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASS }}
-          port:     ${{ secrets.SSH_PORT }}
-          source: ".,!node_modules,!.git"
-          target: /srv/customer
-          strip_components: 0
-          overwrite: true
+      - name: Créer l'archive et encoder en base64
+        run: |
+          tar czf /tmp/deploy.tar.gz \
+            --exclude='./node_modules' \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            .
+          echo "DEPLOY_ARCHIVE=$(base64 -w 0 /tmp/deploy.tar.gz)" >> $GITHUB_ENV
 
-      - name: Installer les dépendances et redémarrer
+      - name: Déployer via SSH (base64)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host:     ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASS }}
           port:     ${{ secrets.SSH_PORT }}
+          envs: DEPLOY_ARCHIVE
           script: |
             set -ex
+            echo "$DEPLOY_ARCHIVE" | base64 -d | tar xz --strip-components=1 -C /srv/customer
             npm install --production --prefix /srv/customer
             pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026 --cwd /srv/customer
