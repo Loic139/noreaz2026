@@ -18,10 +18,10 @@ router.get('/', async (req, res) => {
 
     if (req.session.user) {
         const [s] = await db.query(
-            'SELECT id FROM scores WHERE user_id = ? AND monument_id = ?',
+            'SELECT points FROM scores WHERE user_id = ? AND monument_id = ?',
             [req.session.user.id, monument.id]
         );
-        if (s.length) return res.redirect('/monument?token=' + encodeURIComponent(token));
+        if (s.length && s[0].points > 0) return res.redirect('/monument?token=' + encodeURIComponent(token));
     }
 
     const [questions] = await db.query(
