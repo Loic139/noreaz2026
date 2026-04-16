@@ -10,12 +10,19 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+const notifHeaders = {
+    'Precedence':               'bulk',
+    'X-Auto-Response-Suppress': 'OOF, AutoReply',
+    'Message-ID':               `<${Date.now()}.noreaz2026@digitme.fun>`,
+};
+
 async function sendVerificationEmail(to, firstName, token) {
     const url = `${process.env.APP_URL}/auth/verify/${token}`;
     await transporter.sendMail({
         from: `"Noréaz 2026" <${process.env.SMTP_USER}>`,
         to,
         subject: 'Confirmez votre adresse e-mail — Noréaz 2026',
+        headers: notifHeaders,
         html: `
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
                 <h2 style="color:#1a1a1a">Bonjour ${firstName} !</h2>
@@ -36,6 +43,7 @@ async function sendPasswordResetEmail(to, firstName, token) {
         from: `"Noréaz 2026" <${process.env.SMTP_USER}>`,
         to,
         subject: 'Réinitialisation de votre mot de passe — Noréaz 2026',
+        headers: notifHeaders,
         html: `
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
                 <h2 style="color:#1a1a1a">Bonjour ${firstName} !</h2>
