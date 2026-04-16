@@ -13,6 +13,12 @@ router.get('/', async (req, res) => {
          GROUP BY s.user_id ORDER BY total DESC LIMIT 5`
     );
 
+    const [comments] = await db.query(
+        `SELECT c.id, c.content, c.created_at, u.first_name, u.last_name
+         FROM comments c JOIN users u ON u.id = c.user_id
+         ORDER BY c.created_at DESC LIMIT 50`
+    );
+
     let foundIds = [];
     if (req.session.user) {
         const [rows] = await db.query(
@@ -27,7 +33,23 @@ router.get('/', async (req, res) => {
         monuments,
         top5,
         foundIds,
+        comments,
     });
+});
+
+router.post('/comment', async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
+    }
+    const content = (req.body.content || '').trim().slice(0, 500);
+    if (content.length < 2) {
+        return res.redirect('/#comments');
+    }
+    await db.query(
+        'INSERT INTO comments (user_id, content) VALUES (?, ?)',
+        [req.session.user.id, content]
+    );
+    res.redirect('/#comments');
 });
 
 module.exports = router;
