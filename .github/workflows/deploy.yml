@@ -39,7 +39,10 @@ jobs:
           port:     ${{ secrets.SSH_PORT }}
           script: |
             set -ex
-            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /srv/customer
-            rm /tmp/deploy.tar.gz
+            rm -rf /tmp/staging
+            mkdir -p /tmp/staging
+            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /tmp/staging
+            cp -rp /tmp/staging/. /srv/customer/
+            rm -rf /tmp/staging /tmp/deploy.tar.gz
             npm install --production --prefix /srv/customer
             pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026 --cwd /srv/customer
