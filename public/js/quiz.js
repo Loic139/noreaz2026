@@ -43,6 +43,9 @@
         currentQuestion = index;
         answered = false;
 
+        // Retire le focus pour éviter qu'un bouton apparaisse pré-sélectionné
+        if (document.activeElement) document.activeElement.blur();
+
         const q = questions[index];
 
         // Mise à jour progression
