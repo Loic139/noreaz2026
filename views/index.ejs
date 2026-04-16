@@ -147,10 +147,11 @@
   <% } %>
 
   <!-- Commentaires -->
+  <% const _comments = locals.comments || []; %>
   <div id="comments" class="mt-14">
     <div class="flex items-center justify-between mb-5">
       <h2 class="font-oswald text-2xl font-bold">Messages de la communauté</h2>
-      <div class="badge badge-ghost text-base-content/60"><%= comments.length %> message(s)</div>
+      <div class="badge badge-ghost text-base-content/60"><%= _comments.length %> message(s)</div>
     </div>
 
     <% if (user) { %>
@@ -177,13 +178,13 @@
     </div>
     <% } %>
 
-    <% if (comments.length === 0) { %>
+    <% if (_comments.length === 0) { %>
     <div class="text-center py-10 text-base-content/40 text-sm">
       Aucun message pour l'instant. Sois le premier à écrire !
     </div>
     <% } else { %>
     <div class="flex flex-col gap-3">
-    <% comments.forEach(c => { %>
+    <% _comments.forEach(c => { %>
       <div class="card bg-base-200 border border-base-300">
         <div class="card-body p-4 gap-1">
           <div class="flex items-center justify-between gap-2">
