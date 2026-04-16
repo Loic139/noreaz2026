@@ -46,8 +46,10 @@ router.get('/', async (req, res) => {
 
     // Génération QR codes en base64
     const qrCodes = {};
+    const qrUrls  = {};
     for (const m of monumentList) {
-        const url = process.env.APP_URL + '/monument?token=' + m.qr_token;
+        const url   = process.env.APP_URL + '/monument?token=' + m.qr_token;
+        qrUrls[m.id]  = url;
         qrCodes[m.id] = await qrcode.toDataURL(url, { width: 400, margin: 2, color: { dark: '#1A1A1A', light: '#FFFFFF' } });
     }
 
@@ -57,6 +59,7 @@ router.get('/', async (req, res) => {
         monumentList,
         ranking,
         qrCodes,
+        qrUrls,
     });
 });
 

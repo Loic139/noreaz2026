@@ -54,6 +54,7 @@
         <span class="badge badge-xs mx-auto <%= m.active ? 'badge-success' : 'badge-error' %>">
           <%= m.active ? 'Actif' : 'Inactif' %>
         </span>
+        <p class="text-xs text-base-content/40 font-mono break-all leading-tight"><%= qrUrls[m.id] %></p>
         <a href="<%= qrCodes[m.id] %>" download="qr-<%= m.id %>.png"
            class="btn btn-xs btn-ghost text-base-content/50 mt-1">⬇ Télécharger</a>
       </div>
