@@ -42,28 +42,27 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-    <!-- QR Codes -->
-    <div>
-      <h2 class="font-oswald text-xl mb-3">QR Codes</h2>
-      <div class="card bg-base-200 border border-base-300">
-        <div class="card-body p-4 divide-y divide-base-300">
-        <% monumentList.forEach(m => { %>
-        <div class="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-          <img src="<%= qrCodes[m.id] %>" alt="QR" class="w-16 h-16 rounded-lg flex-shrink-0">
-          <div class="min-w-0">
-            <p class="font-semibold text-sm truncate"><%= m.name %></p>
-            <p class="text-base-content/50 text-xs truncate font-mono">/monument?token=<%= m.qr_token.substring(0,16) %>…</p>
-            <span class="badge badge-xs mt-1 <%= m.active ? 'badge-success' : 'badge-error' %>">
-              <%= m.active ? 'Actif' : 'Inactif' %>
-            </span>
-          </div>
-        </div>
-        <% }) %>
-        </div>
+  <!-- QR Codes -->
+  <div class="mb-6">
+    <h2 class="font-oswald text-xl mb-3">QR Codes</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <% monumentList.forEach(m => { %>
+    <div class="card bg-base-200 border border-base-300 text-center">
+      <div class="card-body p-4 gap-2">
+        <img src="<%= qrCodes[m.id] %>" alt="QR <%= m.name %>" class="w-full rounded-lg">
+        <p class="font-semibold text-sm leading-tight"><%= m.name %></p>
+        <span class="badge badge-xs mx-auto <%= m.active ? 'badge-success' : 'badge-error' %>">
+          <%= m.active ? 'Actif' : 'Inactif' %>
+        </span>
+        <a href="<%= qrCodes[m.id] %>" download="qr-<%= m.id %>.png"
+           class="btn btn-xs btn-ghost text-base-content/50 mt-1">⬇ Télécharger</a>
       </div>
     </div>
+    <% }) %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
     <!-- Classement -->
     <div>

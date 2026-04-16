@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
     const qrCodes = {};
     for (const m of monumentList) {
         const url = process.env.APP_URL + '/monument?token=' + m.qr_token;
-        qrCodes[m.id] = await qrcode.toDataURL(url, { width: 200, color: { dark: '#1A1A1A', light: '#FFFFFF' } });
+        qrCodes[m.id] = await qrcode.toDataURL(url, { width: 400, margin: 2, color: { dark: '#1A1A1A', light: '#FFFFFF' } });
     }
 
     res.render('admin/index', {
