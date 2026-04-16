@@ -13,7 +13,7 @@
         center: [25, 15],
         zoom: 2,
         minZoom: 1,
-        maxZoom: 6,
+        maxZoom: 12,
         worldCopyJump: true,
     });
 
