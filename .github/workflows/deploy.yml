@@ -11,43 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer sshpass
-        run: sudo apt-get install -y sshpass
-
-      - name: Créer l'archive
-        run: |
-          tar czf /tmp/deploy.tar.gz \
-            --exclude='./node_modules' \
-            --exclude='./.git' \
-            --exclude='./.github' \
-            .
-
-      - name: Transférer l'archive via SSH (cat)
-        run: |
-          sshpass -p "${{ secrets.SSH_PASS }}" ssh \
-            -o StrictHostKeyChecking=no \
-            -p ${{ secrets.SSH_PORT }} \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "cat > /tmp/deploy.tar.gz" < /tmp/deploy.tar.gz
-
-      - name: Extraire et déployer
+      - name: Déployer via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASS }}
-          port:     ${{ secrets.SSH_PORT }}
+          host:        ${{ secrets.SSH_HOST }}
+          username:    ${{ secrets.SSH_USER }}
+          password:    ${{ secrets.SSH_PASS }}
+          port:        ${{ secrets.SSH_PORT }}
+          request_pty: true
           script: |
             set -ex
-            rm -rf /tmp/staging
-            mkdir -p /tmp/staging
-            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /tmp/staging
-            find /tmp/staging -type f | while IFS= read -r src; do
-              rel="${src#/tmp/staging/}"
-              dest="/srv/customer/$rel"
-              mkdir -p "$(dirname "$dest")"
-              cp "$src" "$dest"
-            done
-            rm -rf /tmp/staging /tmp/deploy.tar.gz
+            curl -fSL https://github.com/Loic139/noreaz2026/archive/refs/heads/main.tar.gz -o /tmp/deploy.tar.gz
+            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /srv/customer
+            rm /tmp/deploy.tar.gz
             npm install --production --prefix /srv/customer
-            pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026 --cwd /srv/customer
