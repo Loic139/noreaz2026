@@ -11,6 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Déclencher le déploiement Infomaniak
-        run: |
-          curl -f -X POST "${{ secrets.INFOMANIAK_DEPLOY_HOOK }}"
+      - name: Déployer via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASS }}
+          port:     ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            curl -sL https://github.com/Loic139/noreaz2026/archive/refs/heads/main.tar.gz | tar xz --strip-components=1
+            npm install --production
+            pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026
