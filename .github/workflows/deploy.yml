@@ -22,23 +22,14 @@ jobs:
             --exclude='./.github' \
             .
 
-      - name: Transférer l'archive via SSH (cat)
+      - name: Transférer, extraire et installer
         run: |
           sshpass -p "${{ secrets.SSH_PASS }}" ssh \
             -o StrictHostKeyChecking=no \
             -p ${{ secrets.SSH_PORT }} \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "cat > /tmp/deploy.tar" < /tmp/deploy.tar
-
-      - name: Extraire et installer
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASS }}
-          port:     ${{ secrets.SSH_PORT }}
-          script: |
-            set -ex
-            tar xf /tmp/deploy.tar --strip-components=1 -C /srv/customer/sites/noreaz2026.digitme.fun
-            rm /tmp/deploy.tar
-            npm install --production --prefix /srv/customer/sites/noreaz2026.digitme.fun
+            "cat > /tmp/deploy.tar \
+              && tar xf /tmp/deploy.tar --strip-components=1 -C /srv/customer/sites/noreaz2026.digitme.fun \
+              && rm /tmp/deploy.tar \
+              && npm install --production --prefix /srv/customer/sites/noreaz2026.digitme.fun" \
+            < /tmp/deploy.tar
