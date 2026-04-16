@@ -54,3 +54,11 @@
 </div>
 
 <main class="flex-1">
+<% if (user && !user.email_verified) { %>
+<div class="bg-warning/15 border-b border-warning/30 text-warning-content px-4 py-2 text-xs text-center">
+    Votre adresse e-mail n'est pas encore confirmée.
+    <form method="post" action="/auth/resend-verification" class="inline">
+        <button type="submit" class="underline font-semibold hover:opacity-75">Renvoyer l'e-mail</button>
+    </form>
+</div>
+<% } %>

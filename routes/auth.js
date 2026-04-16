@@ -1,7 +1,9 @@
-const express = require('express');
-const router  = express.Router();
-const bcrypt  = require('bcrypt');
-const db      = require('../config/db');
+const express  = require('express');
+const router   = express.Router();
+const bcrypt   = require('bcrypt');
+const crypto   = require('crypto');
+const db       = require('../config/db');
+const { sendVerificationEmail } = require('../config/mailer');
 
 // GET login
 router.get('/login', (req, res) => {
@@ -19,7 +21,7 @@ router.post('/login', async (req, res) => {
     const user   = rows[0];
 
     if (user && await bcrypt.compare(password, user.password)) {
-        req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email };
+        req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: user.email_verified };
         return res.redirect(redirect);
     }
     req.flash('error', 'Email ou mot de passe incorrect.');
@@ -58,13 +60,64 @@ router.post('/register', async (req, res) => {
         return res.redirect('/auth/register?redirect=' + encodeURIComponent(redirect));
     }
 
-    const hash = await bcrypt.hash(password, 12);
+    const hash  = await bcrypt.hash(password, 12);
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const [result] = await db.query(
-        'INSERT INTO users (email, first_name, last_name, password) VALUES (?,?,?,?)',
-        [email.toLowerCase(), first_name, last_name, hash]
+        'INSERT INTO users (email, first_name, last_name, password, verification_token, token_expires_at) VALUES (?,?,?,?,?,?)',
+        [email.toLowerCase(), first_name, last_name, hash, token, expires]
     );
-    req.session.user = { id: result.insertId, first_name, last_name, email: email.toLowerCase() };
+    req.session.user = { id: result.insertId, first_name, last_name, email: email.toLowerCase(), email_verified: 0 };
+
+    try {
+        await sendVerificationEmail(email.toLowerCase(), first_name, token);
+    } catch (e) {
+        console.error('Erreur envoi email:', e.message);
+    }
+
+    req.flash('success', 'Compte créé ! Vérifiez votre e-mail pour activer votre compte.');
     res.redirect(redirect);
+});
+
+// GET verify email
+router.get('/verify/:token', async (req, res) => {
+    const [rows] = await db.query(
+        'SELECT id FROM users WHERE verification_token = ? AND token_expires_at > NOW()',
+        [req.params.token]
+    );
+    if (!rows.length) {
+        req.flash('error', 'Lien de vérification invalide ou expiré.');
+        return res.redirect('/');
+    }
+    await db.query(
+        'UPDATE users SET email_verified = 1, verification_token = NULL, token_expires_at = NULL WHERE id = ?',
+        [rows[0].id]
+    );
+    if (req.session.user && req.session.user.id === rows[0].id) {
+        req.session.user.email_verified = 1;
+    }
+    req.flash('success', 'E-mail confirmé ! Votre compte est activé.');
+    res.redirect('/');
+});
+
+// POST renvoyer l'email de vérification
+router.post('/resend-verification', async (req, res) => {
+    if (!req.session.user) return res.redirect('/auth/login');
+    if (req.session.user.email_verified) return res.redirect('/');
+
+    const token   = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await db.query(
+        'UPDATE users SET verification_token = ?, token_expires_at = ? WHERE id = ?',
+        [token, expires, req.session.user.id]
+    );
+    try {
+        await sendVerificationEmail(req.session.user.email, req.session.user.first_name, token);
+        req.flash('success', 'E-mail de vérification renvoyé.');
+    } catch (e) {
+        req.flash('error', 'Erreur lors de l\'envoi. Réessayez plus tard.');
+    }
+    res.redirect('/');
 });
 
 // GET profile
