@@ -17,7 +17,17 @@
 
     <h1 class="font-oswald text-3xl text-primary mt-1 leading-tight"><%= monument.name %></h1>
     <% if (monument.country) { %><p class="text-primary/70 font-semibold text-sm -mt-1">📍 <%= monument.country %></p><% } %>
-    <% if (monument.description) { %><p class="text-base-content/60 text-sm max-w-xs leading-relaxed"><%= monument.description %></p><% } %>
+
+    <% if (alreadyPlayed && monument.description) { %>
+    <p class="text-base-content/60 text-sm max-w-xs leading-relaxed"><%= monument.description %></p>
+    <% } else if (monument.description) { %>
+    <div class="flex items-center gap-2 bg-base-300 rounded-xl px-4 py-3 text-base-content/50 text-xs mt-1 w-full max-w-xs">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-primary/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+      <span>L'histoire de ce monument se débloque après le quiz.</span>
+    </div>
+    <% } %>
 
     <% if (alreadyPlayed) { %>
     <div class="alert bg-base-300 border-0 text-sm w-full rounded-xl mt-1">

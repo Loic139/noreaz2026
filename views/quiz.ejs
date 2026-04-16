@@ -59,6 +59,15 @@
 
       <p class="text-base-content/65 text-sm mb-7" id="result-message"></p>
 
+      <% if (monument.description) { %>
+      <div class="card bg-base-200 border border-base-300 mb-5 text-left">
+        <div class="card-body p-5 gap-2">
+          <p class="text-xs font-semibold text-primary uppercase tracking-widest">📖 Histoire du monument</p>
+          <p class="text-sm text-base-content/70 leading-relaxed"><%= monument.description %></p>
+        </div>
+      </div>
+      <% } %>
+
       <!-- Share -->
       <div class="card bg-base-200 border border-base-300 mb-5">
         <div class="card-body p-5">
