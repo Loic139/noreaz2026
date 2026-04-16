@@ -39,9 +39,7 @@ jobs:
           port:     ${{ secrets.SSH_PORT }}
           script: |
             set -ex
-            ls -lh /tmp/deploy.tar.gz
-            file /tmp/deploy.tar.gz || true
-            tar tzf /tmp/deploy.tar.gz | head -10 || echo "ERREUR: tar list failed"
-            mkdir -p /tmp/test_extract
-            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /tmp/test_extract || echo "ERREUR: tar extract to /tmp failed"
-            ls /tmp/test_extract/ | head -5 || true
+            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /srv/customer
+            rm /tmp/deploy.tar.gz
+            npm install --production --prefix /srv/customer
+            pm2 restart noreaz2026 || pm2 start app.js --name noreaz2026 --cwd /srv/customer
