@@ -22,6 +22,6 @@ jobs:
           script: |
             set -ex
             curl -fSL https://github.com/Loic139/noreaz2026/archive/refs/heads/main.tar.gz -o /tmp/deploy.tar.gz
-            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /srv/customer
+            tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /srv/customer/sites/noreaz2026.digitme.fun
             rm /tmp/deploy.tar.gz
-            npm install --production --prefix /srv/customer
+            npm install --production --prefix /srv/customer/sites/noreaz2026.digitme.fun
