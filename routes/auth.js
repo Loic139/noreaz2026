@@ -3,7 +3,7 @@ const router   = express.Router();
 const bcrypt   = require('bcrypt');
 const crypto   = require('crypto');
 const db       = require('../config/db');
-const { sendVerificationEmail } = require('../config/mailer');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../config/mailer');
 
 // GET login
 router.get('/login', (req, res) => {
@@ -143,6 +143,79 @@ router.post('/profile', async (req, res) => {
     req.session.user.last_name  = last_name;
     req.flash('success', 'Profil mis à jour.');
     res.redirect('/auth/profile');
+});
+
+// GET forgot password
+router.get('/forgot-password', (req, res) => {
+    if (req.session.user) return res.redirect('/');
+    res.render('forgot-password', { pageTitle: 'Mot de passe oublié — Noréaz 2026' });
+});
+
+// POST forgot password
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    const [rows] = await db.query('SELECT id, first_name FROM users WHERE email = ?', [email.toLowerCase()]);
+
+    // Même réponse si l'email existe ou non (sécurité)
+    req.flash('success', 'Si cette adresse existe, un e-mail vous a été envoyé.');
+
+    if (rows.length) {
+        const token   = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 60 * 60 * 1000); // 1h
+        await db.query(
+            'UPDATE users SET reset_token = ?, reset_expires_at = ? WHERE id = ?',
+            [token, expires, rows[0].id]
+        );
+        try {
+            await sendPasswordResetEmail(email.toLowerCase(), rows[0].first_name, token);
+        } catch (e) {
+            console.error('Erreur envoi email reset:', e.message);
+        }
+    }
+    res.redirect('/auth/forgot-password');
+});
+
+// GET reset password
+router.get('/reset-password/:token', async (req, res) => {
+    const [rows] = await db.query(
+        'SELECT id FROM users WHERE reset_token = ? AND reset_expires_at > NOW()',
+        [req.params.token]
+    );
+    if (!rows.length) {
+        req.flash('error', 'Lien invalide ou expiré. Faites une nouvelle demande.');
+        return res.redirect('/auth/forgot-password');
+    }
+    res.render('reset-password', { pageTitle: 'Nouveau mot de passe — Noréaz 2026', token: req.params.token });
+});
+
+// POST reset password
+router.post('/reset-password/:token', async (req, res) => {
+    const { password, confirm } = req.body;
+    const [rows] = await db.query(
+        'SELECT id, first_name, last_name, email FROM users WHERE reset_token = ? AND reset_expires_at > NOW()',
+        [req.params.token]
+    );
+    if (!rows.length) {
+        req.flash('error', 'Lien invalide ou expiré. Faites une nouvelle demande.');
+        return res.redirect('/auth/forgot-password');
+    }
+    if (!password || password.length < 6) {
+        req.flash('error', 'Le mot de passe doit contenir au moins 6 caractères.');
+        return res.redirect(`/auth/reset-password/${req.params.token}`);
+    }
+    if (password !== confirm) {
+        req.flash('error', 'Les mots de passe ne correspondent pas.');
+        return res.redirect(`/auth/reset-password/${req.params.token}`);
+    }
+    const hash = await bcrypt.hash(password, 12);
+    const user = rows[0];
+    await db.query(
+        'UPDATE users SET password = ?, reset_token = NULL, reset_expires_at = NULL WHERE id = ?',
+        [hash, user.id]
+    );
+    req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: 1 };
+    req.flash('success', 'Mot de passe mis à jour ! Vous êtes connecté.');
+    res.redirect('/');
 });
 
 // GET logout

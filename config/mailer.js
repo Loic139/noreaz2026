@@ -30,4 +30,24 @@ async function sendVerificationEmail(to, firstName, token) {
     });
 }
 
-module.exports = { sendVerificationEmail };
+async function sendPasswordResetEmail(to, firstName, token) {
+    const url = `${process.env.APP_URL}/auth/reset-password/${token}`;
+    await transporter.sendMail({
+        from: `"Noréaz 2026" <${process.env.SMTP_USER}>`,
+        to,
+        subject: 'Réinitialisation de votre mot de passe — Noréaz 2026',
+        html: `
+            <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+                <h2 style="color:#1a1a1a">Bonjour ${firstName} !</h2>
+                <p>Vous avez demandé à réinitialiser votre mot de passe.</p>
+                <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
+                <a href="${url}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#570df8;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold">
+                    Réinitialiser mon mot de passe
+                </a>
+                <p style="color:#888;font-size:12px">Ce lien est valable 1 heure. Si vous n'avez pas fait cette demande, ignorez cet e-mail.</p>
+            </div>
+        `,
+    });
+}
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };

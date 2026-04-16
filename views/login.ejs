@@ -23,7 +23,10 @@
       </label>
       <button type="submit" class="btn btn-primary w-full mt-1">Se connecter</button>
     </form>
-    <p class="text-center text-xs text-base-content/50 mt-4">
+    <p class="text-center text-xs text-base-content/50 mt-3">
+      <a href="/auth/forgot-password" class="link link-hover text-base-content/40 hover:text-primary">Mot de passe oublié ?</a>
+    </p>
+    <p class="text-center text-xs text-base-content/50 mt-2">
       Pas encore de compte ?
       <a href="/auth/register?redirect=<%= encodeURIComponent(redirect) %>" class="link link-primary font-semibold">S'inscrire</a>
     </p>
