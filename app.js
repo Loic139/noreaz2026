@@ -4,6 +4,7 @@ const session       = require('express-session');
 const flash         = require('connect-flash');
 const path          = require('path');
 const { version }   = require('./package.json');
+const { rememberMe } = require('./middleware/remember');
 
 // ---- V\u00e9rifs d'environnement critiques ----
 if (!process.env.SESSION_SECRET) {
@@ -44,6 +45,9 @@ app.use(session({
 }));
 
 app.use(flash());
+
+// Auto-login transparent via cookie httpOnly (doit être après session)
+app.use(rememberMe);
 
 // Variables globales accessibles dans toutes les vues
 app.use((req, res, next) => {

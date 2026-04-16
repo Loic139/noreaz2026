@@ -4,6 +4,11 @@ const bcrypt   = require('bcrypt');
 const crypto   = require('crypto');
 const db       = require('../config/db');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../config/mailer');
+const { COOKIE_NAME: REMEMBER_COOKIE, cookieOptions: rememberOptions } = require('../middleware/remember');
+
+const isProd = process.env.NODE_ENV === 'production';
+const setRememberCookie  = (res, token) => res.cookie(REMEMBER_COOKIE, token, rememberOptions(isProd));
+const clearRememberCookie = (res)        => res.clearCookie(REMEMBER_COOKIE, { path: '/' });
 
 // ---- Utilitaires ----
 const MIN_PASSWORD_LENGTH = 8;
@@ -59,6 +64,7 @@ router.post('/login', async (req, res) => {
                 return res.redirect('/auth/login');
             }
             req.session.user = buildSessionUser({ ...user, persistent_token: pt });
+            setRememberCookie(res, pt);
             res.redirect(redirect);
         });
         return;
@@ -127,6 +133,7 @@ router.post('/register', async (req, res) => {
             id: result.insertId, first_name, last_name, email,
             email_verified: 0, persistent_token: pt,
         });
+        setRememberCookie(res, pt);
 
         // envoi mail en "fire and forget" (pas besoin d'attendre)
         sendVerificationEmail(email, first_name, token)
@@ -155,6 +162,7 @@ router.get('/verify/:token', async (req, res) => {
     const pt = user.persistent_token || crypto.randomBytes(32).toString('hex');
     if (!user.persistent_token) await db.query('UPDATE users SET persistent_token = ? WHERE id = ?', [pt, user.id]);
     req.session.user = buildSessionUser({ ...user, email_verified: 1, persistent_token: pt });
+    setRememberCookie(res, pt);
     req.flash('success', 'E-mail confirmé ! Bienvenue ' + user.first_name + ' !');
     res.redirect('/');
 });
@@ -205,24 +213,8 @@ router.post('/profile', async (req, res) => {
     res.redirect('/auth/profile');
 });
 
-// POST auto-login via persistent token (localStorage)
-router.post('/auto-login', async (req, res) => {
-    const token = typeof req.body.token === 'string' ? req.body.token : '';
-    // Un token valide fait 64 chars hex (randomBytes(32)). On rejette tout ce qui ne matche pas.
-    if (!/^[a-f0-9]{64}$/i.test(token)) return res.json({ ok: false });
-
-    const [rows] = await db.query(
-        'SELECT id, first_name, last_name, email, email_verified, persistent_token FROM users WHERE persistent_token = ?',
-        [token]
-    );
-    if (!rows.length) return res.json({ ok: false });
-    const u = rows[0];
-    req.session.regenerate(err => {
-        if (err) return res.json({ ok: false });
-        req.session.user = buildSessionUser(u);
-        res.json({ ok: true });
-    });
-});
+// (L'ancienne route /auto-login basée sur localStorage a été supprimée.
+//  L'auto-login est désormais transparent via le middleware remember + cookie httpOnly.)
 
 // GET forgot password
 router.get('/forgot-password', (req, res) => {
@@ -294,14 +286,17 @@ router.post('/reset-password/:token', async (req, res) => {
     }
     const hash = await bcrypt.hash(password, 12);
     const user = rows[0];
-    // On invalide aussi tous les tokens persistants actifs (sécurité : changement de mdp = déconnexion partout)
+    // Changement de mdp = invalidation de tous les "remember me" actifs (défense en profondeur)
+    // puis on en génère un nouveau pour l'appareil actuel.
+    const newPt = crypto.randomBytes(32).toString('hex');
     await db.query(
-        'UPDATE users SET password = ?, reset_token = NULL, reset_expires_at = NULL, persistent_token = NULL WHERE id = ?',
-        [hash, user.id]
+        'UPDATE users SET password = ?, reset_token = NULL, reset_expires_at = NULL, persistent_token = ? WHERE id = ?',
+        [hash, newPt, user.id]
     );
     req.session.regenerate(err => {
         if (err) return res.redirect('/auth/login');
-        req.session.user = buildSessionUser({ ...user, email_verified: 1, persistent_token: null });
+        req.session.user = buildSessionUser({ ...user, email_verified: 1, persistent_token: newPt });
+        setRememberCookie(res, newPt);
         req.flash('success', 'Mot de passe mis à jour ! Vous êtes connecté.');
         res.redirect('/');
     });
@@ -312,6 +307,7 @@ router.post('/logout', async (req, res) => {
     if (req.session.user) {
         await db.query('UPDATE users SET persistent_token = NULL WHERE id = ?', [req.session.user.id]);
     }
+    clearRememberCookie(res);
     req.session.destroy(() => {
         res.clearCookie('noreaz.sid');
         res.redirect('/');

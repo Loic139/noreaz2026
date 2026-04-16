@@ -12,25 +12,9 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <script>
-(function() {
-    <% if (user && user.persistent_token) { %>
-    // Utilisateur connecté : sauvegarder le token
-    localStorage.setItem('noreaz_pt', '<%= user.persistent_token %>');
-    <% } else if (!user) { %>
-    // Pas de session : tenter un auto-login via localStorage
-    var pt = localStorage.getItem('noreaz_pt');
-    if (pt) {
-        fetch('/auth/auto-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: pt })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) { if (d.ok) location.reload(); else localStorage.removeItem('noreaz_pt'); })
-        .catch(function() {});
-    }
-    <% } %>
-})();
+// Auto-login transparent côté serveur (cookie httpOnly). Plus besoin de JS.
+// Nettoyage one-shot de l'ancien token localStorage (migration).
+try { localStorage.removeItem('noreaz_pt'); } catch (_) {}
 </script>
 <body class="min-h-screen flex flex-col">
 
