@@ -11,17 +11,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Déployer via SSH
+      - name: Installer sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Créer l'archive
+        run: |
+          tar czf /tmp/deploy.tar.gz \
+            --exclude='./node_modules' \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            .
+
+      - name: Transférer l'archive via SSH (cat)
+        run: |
+          sshpass -p "${{ secrets.SSH_PASS }}" ssh \
+            -o StrictHostKeyChecking=no \
+            -p ${{ secrets.SSH_PORT }} \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "cat > /tmp/deploy.tar.gz" < /tmp/deploy.tar.gz
+
+      - name: Extraire et installer
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host:        ${{ secrets.SSH_HOST }}
-          username:    ${{ secrets.SSH_USER }}
-          password:    ${{ secrets.SSH_PASS }}
-          port:        ${{ secrets.SSH_PORT }}
-          request_pty: true
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASS }}
+          port:     ${{ secrets.SSH_PORT }}
           script: |
             set -ex
-            curl -fSL https://github.com/Loic139/noreaz2026/archive/refs/heads/main.tar.gz -o /tmp/deploy.tar.gz
             tar xzf /tmp/deploy.tar.gz --strip-components=1 -C /srv/customer/sites/noreaz2026.digitme.fun
             rm /tmp/deploy.tar.gz
             npm install --production --prefix /srv/customer/sites/noreaz2026.digitme.fun
