@@ -7,9 +7,9 @@
     <div class="badge badge-outline badge-primary badge-lg font-semibold tracking-wide px-4">✓ Monument trouvé !</div>
 
     <% if (monument.image) { %>
-    <figure class="mt-2">
+    <figure class="mt-2 w-44">
       <img src="/img/monuments/<%= monument.image %>" alt="<%= monument.name %>"
-           class="w-36 h-36 object-contain rounded-2xl shadow-xl">
+           class="w-full h-auto rounded-2xl shadow-xl">
     </figure>
     <% } else { %>
     <div class="w-32 h-32 bg-base-300 rounded-2xl flex items-center justify-center text-5xl mt-2 shadow">🏛️</div>
