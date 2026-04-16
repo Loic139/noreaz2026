@@ -178,10 +178,10 @@ router.post('/forgot-password', async (req, res) => {
 // GET reset password
 router.get('/reset-password/:token', async (req, res) => {
     const [rows] = await db.query(
-        'SELECT id FROM users WHERE reset_token = ? AND reset_expires_at > NOW()',
+        'SELECT id, reset_expires_at FROM users WHERE reset_token = ?',
         [req.params.token]
     );
-    if (!rows.length) {
+    if (!rows.length || !rows[0].reset_expires_at || new Date(rows[0].reset_expires_at) < new Date()) {
         req.flash('error', 'Lien invalide ou expiré. Faites une nouvelle demande.');
         return res.redirect('/auth/forgot-password');
     }
@@ -192,9 +192,13 @@ router.get('/reset-password/:token', async (req, res) => {
 router.post('/reset-password/:token', async (req, res) => {
     const { password, confirm } = req.body;
     const [rows] = await db.query(
-        'SELECT id, first_name, last_name, email FROM users WHERE reset_token = ? AND reset_expires_at > NOW()',
+        'SELECT id, first_name, last_name, email, reset_expires_at FROM users WHERE reset_token = ?',
         [req.params.token]
     );
+    if (rows.length && (!rows[0].reset_expires_at || new Date(rows[0].reset_expires_at) < new Date())) {
+        req.flash('error', 'Lien invalide ou expiré. Faites une nouvelle demande.');
+        return res.redirect('/auth/forgot-password');
+    }
     if (!rows.length) {
         req.flash('error', 'Lien invalide ou expiré. Faites une nouvelle demande.');
         return res.redirect('/auth/forgot-password');
