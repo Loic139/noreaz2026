@@ -1,0 +1,96 @@
+<%- include('layouts/header') %>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <!-- En-tête -->
+  <div class="text-center mb-5">
+    <div class="badge badge-outline badge-primary font-semibold tracking-wide px-4 mb-3">🗺️ Géo-Quiz</div>
+    <h2 class="font-oswald text-3xl text-primary"><%= monument.name %></h2>
+    <p class="text-base-content/55 text-sm mt-1">Où se trouve ce monument dans le monde ?</p>
+  </div>
+
+  <% if (bestScore) { %>
+  <div class="alert bg-base-200 border border-base-300 text-sm mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-primary shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <span>Meilleure tentative : <strong class="text-primary"><%= bestScore.distance_km.toLocaleString('fr-CH') %> km</strong> · <strong class="text-primary"><%= bestScore.points %>/5 pts</strong> — Rejoue pour faire mieux !</span>
+  </div>
+  <% } %>
+
+  <!-- Instructions -->
+  <div id="instructions" class="alert bg-primary/10 border border-primary/20 text-sm mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-primary shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <span>Clique sur la carte pour placer <strong><%= monument.name %></strong>, puis confirme ta position.</span>
+  </div>
+
+  <!-- Carte Leaflet -->
+  <div id="geo-map" class="rounded-2xl overflow-hidden border border-base-300 shadow-xl w-full" style="height:380px"></div>
+
+  <!-- Bouton confirmer -->
+  <div class="text-center mt-4" id="confirm-wrapper" style="display:none">
+    <button id="confirm-btn" class="btn btn-primary btn-wide">
+      📍 Confirmer ma position
+    </button>
+  </div>
+
+  <!-- Section résultat -->
+  <div id="result-section" style="display:none" class="mt-6">
+    <div class="card bg-base-200 border border-base-300 shadow-xl">
+      <div class="card-body items-center text-center gap-3 p-6">
+
+        <p class="font-oswald text-2xl" id="distance-text"></p>
+
+        <div class="w-28 h-28 rounded-full flex items-center justify-center
+                    bg-primary/10 border-4 border-primary/25
+                    font-oswald text-3xl font-bold text-primary"
+             id="geo-score-circle"></div>
+
+        <p class="text-base-content/65 text-sm" id="geo-score-message"></p>
+
+        <!-- Tableau de scoring -->
+        <div class="w-full overflow-x-auto mt-1">
+          <table class="table table-sm bg-base-100 rounded-xl text-xs w-full">
+            <thead><tr class="text-base-content/50 uppercase tracking-widest">
+              <th>Distance</th><th>Points</th>
+            </tr></thead>
+            <tbody>
+              <tr id="row-5" class="opacity-30"><td>&lt; 200 km</td><td class="text-primary font-bold">5 pts</td></tr>
+              <tr id="row-4" class="opacity-30"><td>&lt; 500 km</td><td class="text-primary font-bold">4 pts</td></tr>
+              <tr id="row-3" class="opacity-30"><td>&lt; 1 500 km</td><td class="text-primary font-bold">3 pts</td></tr>
+              <tr id="row-2" class="opacity-30"><td>&lt; 3 000 km</td><td class="text-primary font-bold">2 pts</td></tr>
+              <tr id="row-1" class="opacity-30"><td>&lt; 6 000 km</td><td class="text-primary font-bold">1 pt</td></tr>
+              <tr id="row-0" class="opacity-30"><td>&gt; 6 000 km</td><td class="text-base-content/40">0 pt</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex flex-col w-full gap-2 mt-2">
+          <a href="/leaderboard" class="btn btn-primary w-full">Voir le classement</a>
+          <a href="/monument?token=<%= encodeURIComponent(token) %>" class="btn btn-ghost w-full">Retour au monument</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+window.GEO_DATA = {
+    monumentId: <%- monument.id %>,
+    lat:        <%- monument.latitude %>,
+    lng:        <%- monument.longitude %>,
+    name:       <%- JSON.stringify(monument.name) %>,
+    saveUrl:    <% if (user) { %>'/geo-quiz/save'<% } else { %>''<% } %>,
+};
+</script>
+<script src="/js/geo-quiz.js"></script>
+
+<%- include('layouts/footer') %>

@@ -35,6 +35,9 @@
     </div>
     <div class="flex flex-col w-full gap-2 mt-2">
       <a href="/leaderboard" class="btn btn-primary w-full">Voir le classement</a>
+      <a href="/geo-quiz?token=<%= encodeURIComponent(token) %>" class="btn btn-outline border-primary/30 text-primary w-full">
+        🗺️ Géo-Quiz — Localise ce monument
+      </a>
       <a href="/" class="btn btn-ghost w-full">Retour à l'accueil</a>
     </div>
 
@@ -57,6 +60,9 @@
         Pas encore de compte ? S'inscrire
       </a>
       <% } %>
+      <a href="/geo-quiz?token=<%= encodeURIComponent(token) %>" class="btn btn-outline border-primary/30 text-primary w-full">
+        🗺️ Géo-Quiz — Localise ce monument
+      </a>
     </div>
     <% } %>
 
