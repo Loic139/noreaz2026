@@ -121,9 +121,9 @@
 
     // ── Calcul du score ────────────────────────────────────────────────────
     function calcPoints(km) {
-        if (km <=   10) return 5;
-        if (km <=   50) return 4;
-        if (km <=  200) return 3;
+        if (km <=    1) return 5;
+        if (km <=   10) return 4;
+        if (km <=   50) return 3;
         if (km <=  500) return 2;
         if (km <= 1000) return 1;
         return 0;
