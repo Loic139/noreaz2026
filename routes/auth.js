@@ -82,21 +82,20 @@ router.post('/register', async (req, res) => {
 // GET verify email
 router.get('/verify/:token', async (req, res) => {
     const [rows] = await db.query(
-        'SELECT id FROM users WHERE verification_token = ? AND token_expires_at > NOW()',
+        'SELECT id, first_name, last_name, email FROM users WHERE verification_token = ? AND token_expires_at > NOW()',
         [req.params.token]
     );
     if (!rows.length) {
         req.flash('error', 'Lien de vérification invalide ou expiré.');
         return res.redirect('/');
     }
+    const user = rows[0];
     await db.query(
         'UPDATE users SET email_verified = 1, verification_token = NULL, token_expires_at = NULL WHERE id = ?',
-        [rows[0].id]
+        [user.id]
     );
-    if (req.session.user && req.session.user.id === rows[0].id) {
-        req.session.user.email_verified = 1;
-    }
-    req.flash('success', 'E-mail confirmé ! Votre compte est activé.');
+    req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: 1 };
+    req.flash('success', 'E-mail confirmé ! Bienvenue ' + user.first_name + ' !');
     res.redirect('/');
 });
 
