@@ -21,7 +21,9 @@ router.post('/login', async (req, res) => {
     const user   = rows[0];
 
     if (user && await bcrypt.compare(password, user.password)) {
-        req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: user.email_verified };
+        const pt = crypto.randomBytes(32).toString('hex');
+        await db.query('UPDATE users SET persistent_token = ? WHERE id = ?', [pt, user.id]);
+        req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: user.email_verified, persistent_token: pt };
         return res.redirect(redirect);
     }
     req.flash('error', 'Email ou mot de passe incorrect.');
@@ -67,7 +69,9 @@ router.post('/register', async (req, res) => {
         'INSERT INTO users (email, first_name, last_name, password, verification_token, token_expires_at) VALUES (?,?,?,?,?,?)',
         [email.toLowerCase(), first_name, last_name, hash, token, expires]
     );
-    req.session.user = { id: result.insertId, first_name, last_name, email: email.toLowerCase(), email_verified: 0 };
+    const pt = crypto.randomBytes(32).toString('hex');
+    await db.query('UPDATE users SET persistent_token = ? WHERE id = ?', [pt, result.insertId]);
+    req.session.user = { id: result.insertId, first_name, last_name, email: email.toLowerCase(), email_verified: 0, persistent_token: pt };
 
     try {
         await sendVerificationEmail(email.toLowerCase(), first_name, token);
@@ -82,7 +86,7 @@ router.post('/register', async (req, res) => {
 // GET verify email
 router.get('/verify/:token', async (req, res) => {
     const [rows] = await db.query(
-        'SELECT id, first_name, last_name, email FROM users WHERE verification_token = ? AND token_expires_at > NOW()',
+        'SELECT id, first_name, last_name, email, persistent_token FROM users WHERE verification_token = ? AND token_expires_at > NOW()',
         [req.params.token]
     );
     if (!rows.length) {
@@ -94,7 +98,9 @@ router.get('/verify/:token', async (req, res) => {
         'UPDATE users SET email_verified = 1, verification_token = NULL, token_expires_at = NULL WHERE id = ?',
         [user.id]
     );
-    req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: 1 };
+    const pt = user.persistent_token || crypto.randomBytes(32).toString('hex');
+    if (!user.persistent_token) await db.query('UPDATE users SET persistent_token = ? WHERE id = ?', [pt, user.id]);
+    req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: 1, persistent_token: pt };
     req.flash('success', 'E-mail confirmé ! Bienvenue ' + user.first_name + ' !');
     res.redirect('/');
 });
@@ -143,6 +149,20 @@ router.post('/profile', async (req, res) => {
     req.session.user.last_name  = last_name;
     req.flash('success', 'Profil mis à jour.');
     res.redirect('/auth/profile');
+});
+
+// POST auto-login via persistent token (localStorage)
+router.post('/auto-login', async (req, res) => {
+    const { token } = req.body;
+    if (!token) return res.json({ ok: false });
+    const [rows] = await db.query(
+        'SELECT id, first_name, last_name, email, email_verified, persistent_token FROM users WHERE persistent_token = ?',
+        [token]
+    );
+    if (!rows.length) return res.json({ ok: false });
+    const u = rows[0];
+    req.session.user = { id: u.id, first_name: u.first_name, last_name: u.last_name, email: u.email, email_verified: u.email_verified, persistent_token: u.persistent_token };
+    res.json({ ok: true });
 });
 
 // GET forgot password
@@ -223,7 +243,10 @@ router.post('/reset-password/:token', async (req, res) => {
 });
 
 // GET logout
-router.get('/logout', (req, res) => {
+router.get('/logout', async (req, res) => {
+    if (req.session.user) {
+        await db.query('UPDATE users SET persistent_token = NULL WHERE id = ?', [req.session.user.id]);
+    }
     req.session.destroy();
     res.redirect('/');
 });

@@ -11,6 +11,27 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
+<script>
+(function() {
+    <% if (user && user.persistent_token) { %>
+    // Utilisateur connecté : sauvegarder le token
+    localStorage.setItem('noreaz_pt', '<%= user.persistent_token %>');
+    <% } else if (!user) { %>
+    // Pas de session : tenter un auto-login via localStorage
+    var pt = localStorage.getItem('noreaz_pt');
+    if (pt) {
+        fetch('/auth/auto-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: pt })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.ok) location.reload(); else localStorage.removeItem('noreaz_pt'); })
+        .catch(function() {});
+    }
+    <% } %>
+})();
+</script>
 <body class="min-h-screen flex flex-col">
 
 <div class="navbar bg-base-200 border-b border-base-300 sticky top-0 z-50 px-4">
