@@ -102,6 +102,7 @@
             b.disabled = true;
             if (b.dataset.correct === '1') b.classList.add('correct');
         });
+        if (!isCorrect) btn.classList.add('wrong');
 
         if (isCorrect) {
             score++;
