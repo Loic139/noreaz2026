@@ -48,7 +48,11 @@
         <% if (user) { %>
         <li class="menu-title opacity-40 text-xs"><%= user.first_name %></li>
         <li><a href="/auth/profile">Mon profil</a></li>
-        <li><a href="/auth/logout" class="text-error">Déconnexion</a></li>
+        <li>
+          <form method="post" action="/auth/logout" class="p-0">
+            <button type="submit" class="text-error w-full text-left">Déconnexion</button>
+          </form>
+        </li>
         <% } else { %>
         <li><a href="/auth/login">Se connecter</a></li>
         <li><a href="/auth/register">S'inscrire</a></li>
@@ -66,7 +70,9 @@
     <div class="divider divider-horizontal mx-1"></div>
     <% if (user) { %>
     <a href="/auth/profile" class="btn btn-ghost btn-sm font-medium"><%= user.first_name %></a>
-    <a href="/auth/logout" class="btn btn-ghost btn-sm text-error/60 hover:text-error">Déconnexion</a>
+    <form method="post" action="/auth/logout" class="inline">
+      <button type="submit" class="btn btn-ghost btn-sm text-error/60 hover:text-error">Déconnexion</button>
+    </form>
     <% } else { %>
     <a href="/auth/login" class="btn btn-ghost btn-sm font-medium">Se connecter</a>
     <a href="/auth/register" class="btn btn-primary btn-sm ml-1">S'inscrire</a>

@@ -8,7 +8,9 @@ router.get('/', async (req, res) => {
     );
 
     const [top5] = await db.query(
-        `SELECT u.first_name, u.last_name, SUM(s.points) AS total
+        `SELECT u.first_name, u.last_name,
+                SUM(s.points) AS total,
+                COUNT(DISTINCT s.monument_id) AS monuments_joues
          FROM scores s JOIN users u ON u.id = s.user_id
          GROUP BY s.user_id ORDER BY total DESC LIMIT 5`
     );

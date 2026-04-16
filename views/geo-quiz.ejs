@@ -97,12 +97,16 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// Anti-triche : on n'expose PAS les coordonnées du monument tant que le joueur n'a pas confirmé.
+// Le serveur est la source de vérité pour distance + points.
 window.GEO_DATA = {
     monumentId: <%- monument.id %>,
-    lat:        <%- monument.latitude %>,
-    lng:        <%- monument.longitude %>,
     name:       <%- JSON.stringify(monument.name) %>,
-    saveUrl:    <% if (user) { %>'/geo-quiz/save'<% } else { %>''<% } %>,
+    checkUrl:   '/geo-quiz/check',
+    <% if (alreadyPlayed && monument.latitude) { %>
+    // Affichage en relecture (déjà joué) : on a le droit de montrer la réponse
+    replay: { lat: <%- monument.latitude %>, lng: <%- monument.longitude %> },
+    <% } %>
 };
 </script>
 <script src="/js/geo-quiz.js"></script>

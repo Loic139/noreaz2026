@@ -46,7 +46,7 @@
     <div class="flex flex-col w-full gap-2 mt-2">
       <% if (user) { %>
       <a href="/quiz?token=<%= encodeURIComponent(token) %>" class="btn btn-primary w-full">
-        🎯 Lancer le quiz (classement)
+        🎯 Lancer le quiz
       </a>
       <% } else { %>
       <a href="/quiz?token=<%= encodeURIComponent(token) %>&mode=anon" class="btn btn-primary w-full">

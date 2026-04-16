@@ -34,11 +34,12 @@
         </thead>
         <tbody>
         <% ranking.forEach((row, i) => { %>
-        <tr class="<%= i === 0 ? 'font-semibold' : '' %>">
+        <% const isMe = user && row.user_id === user.id; %>
+        <tr class="<%= i === 0 ? 'font-semibold' : '' %> <%= isMe ? 'bg-primary/10' : '' %>">
           <td class="text-xl leading-none py-3">
             <% if(i===0){%>🥇<%}else if(i===1){%>🥈<%}else if(i===2){%>🥉<%}else{%><span class="text-base-content/50 text-sm font-bold"><%= i+1 %></span><%}%>
           </td>
-          <td><%= row.first_name %> <%= row.last_name %></td>
+          <td><%= row.first_name %> <%= row.last_name %><% if (isMe) { %> <span class="badge badge-primary badge-xs ml-1">toi</span><% } %></td>
           <td>
             <span class="text-primary font-bold"><%= row.total %></span>
             <span class="text-base-content/65 text-xs"> / <%= nbMonuments * QUIZ_QUESTIONS %></span>

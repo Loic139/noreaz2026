@@ -4,7 +4,8 @@ const db      = require('../config/db');
 
 router.get('/', async (req, res) => {
     const [ranking] = await db.query(
-        `SELECT u.first_name, u.last_name, SUM(s.points) AS total, COUNT(s.id) AS monuments_joues
+        `SELECT u.id AS user_id, u.first_name, u.last_name,
+                SUM(s.points) AS total, COUNT(s.id) AS monuments_joues
          FROM scores s JOIN users u ON u.id = s.user_id
          GROUP BY s.user_id ORDER BY total DESC, monuments_joues ASC`
     );
@@ -12,13 +13,11 @@ router.get('/', async (req, res) => {
 
     let myRank = null, myScore = null;
     if (req.session.user) {
-        ranking.forEach((row, i) => {
-            if (row.first_name === req.session.user.first_name &&
-                row.last_name  === req.session.user.last_name) {
-                myRank  = i + 1;
-                myScore = row.total;
-            }
-        });
+        const idx = ranking.findIndex(row => row.user_id === req.session.user.id);
+        if (idx !== -1) {
+            myRank  = idx + 1;
+            myScore = ranking[idx].total;
+        }
     }
 
     res.render('leaderboard', {

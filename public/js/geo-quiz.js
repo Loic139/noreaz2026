@@ -1,6 +1,7 @@
 /**
  * Noréaz 2026 — Géo-Quiz
  * L'utilisateur clique sur la carte pour localiser un monument.
+ * Le serveur calcule la distance et les points (anti-triche).
  */
 (function () {
     'use strict';
@@ -61,72 +62,92 @@
     });
 
     // ── Bouton Confirmer ───────────────────────────────────────────────────
-    document.getElementById('confirm-btn').addEventListener('click', function () {
-        if (!userMarker || confirmed) return;
-        confirmed = true;
+    const confirmBtn = document.getElementById('confirm-btn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async function () {
+            if (!userMarker || confirmed) return;
+            confirmed = true;
 
-        document.getElementById('confirm-wrapper').style.display = 'none';
-        document.getElementById('instructions').style.display    = 'none';
+            document.getElementById('confirm-wrapper').style.display = 'none';
+            document.getElementById('instructions').style.display    = 'none';
 
-        const userPos = userMarker.getLatLng();
-        const distance = Math.round(haversine(userPos.lat, userPos.lng, data.lat, data.lng));
-        const pts = calcPoints(distance);
+            const userPos = userMarker.getLatLng();
 
+            // Désactive les futurs clics
+            confirmBtn.disabled = true;
+
+            let result;
+            try {
+                const resp = await fetch(data.checkUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        monument_id: data.monumentId,
+                        lat: userPos.lat,
+                        lng: userPos.lng,
+                    }),
+                });
+                result = await resp.json();
+            } catch (_) {
+                alert('Erreur réseau. Réessaie plus tard.');
+                return;
+            }
+
+            if (!result || !result.ok) {
+                if (result && result.error === 'already_played') {
+                    alert('Tu as déjà joué ce monument.');
+                    window.location.reload();
+                    return;
+                }
+                alert('Erreur lors de la validation.');
+                return;
+            }
+
+            drawResult(userPos, result.target, result.distance_km, result.points);
+        });
+    }
+
+    // ── Affichage de la correction sur la carte ────────────────────────────
+    function drawResult(userPos, target, distance, pts) {
         // Marqueur correct
-        const correctMarker = L.marker([data.lat, data.lng], { icon: iconCorrect }).addTo(map);
-        correctMarker.bindPopup(`<strong>${data.name}</strong>`).openPopup();
+        const correctMarker = L.marker([target.lat, target.lng], { icon: iconCorrect }).addTo(map);
+        correctMarker.bindPopup(`<strong>${escapeHtml(target.name || data.name)}</strong>`).openPopup();
 
         // Ligne en pointillé
         L.polyline(
-            [[userPos.lat, userPos.lng], [data.lat, data.lng]],
+            [[userPos.lat, userPos.lng], [target.lat, target.lng]],
             { color: '#8C2333', weight: 2, dashArray: '8 6', opacity: 0.8 }
         ).addTo(map);
 
         // Recadrage sur les deux points
         map.fitBounds(
-            [[userPos.lat, userPos.lng], [data.lat, data.lng]],
+            [[userPos.lat, userPos.lng], [target.lat, target.lng]],
             { padding: [50, 50], maxZoom: 5 }
         );
 
-        // Affichage du résultat
         showResult(distance, pts);
+    }
 
-        // Sauvegarde serveur
-        if (data.saveUrl) {
-            fetch(data.saveUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ monument_id: data.monumentId, distance_km: distance, points: pts }),
-            }).catch(() => {});
-        }
-    });
-
-    // ── Affichage du résultat ──────────────────────────────────────────────
+    // ── Affichage de la section résultat ───────────────────────────────────
     function showResult(distance, pts) {
-        document.getElementById('distance-text').textContent  = formatDist(distance);
-        document.getElementById('geo-score-circle').textContent = pts + ' / 5';
-        document.getElementById('geo-score-message').textContent = getMessage(pts);
+        const distEl  = document.getElementById('distance-text');
+        const scoreEl = document.getElementById('geo-score-circle');
+        const msgEl   = document.getElementById('geo-score-message');
+        if (distEl)  distEl.textContent  = formatDist(distance);
+        if (scoreEl) scoreEl.textContent = pts + ' / 5';
+        if (msgEl)   msgEl.textContent   = getMessage(pts);
 
-        // Surbrillance de la ligne correspondante
         const rowEl = document.getElementById('row-' + pts);
         if (rowEl) {
             rowEl.classList.remove('opacity-30');
             rowEl.classList.add('bg-primary/10', 'font-bold');
         }
 
-        document.getElementById('result-section').style.display = 'block';
-        // Scroll vers résultat
-        setTimeout(() => document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
-    }
-
-    // ── Calcul du score ────────────────────────────────────────────────────
-    function calcPoints(km) {
-        if (km <=    1) return 5;
-        if (km <=   10) return 4;
-        if (km <=   50) return 3;
-        if (km <=  500) return 2;
-        if (km <= 1000) return 1;
-        return 0;
+        const section = document.getElementById('result-section');
+        if (section) {
+            section.style.display = 'block';
+            setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+        }
     }
 
     // ── Formattage de la distance ──────────────────────────────────────────
@@ -148,15 +169,11 @@
         return msgs[pts];
     }
 
-    // ── Formule de Haversine (distance en km) ─────────────────────────────
-    function haversine(lat1, lon1, lat2, lon2) {
-        const R  = 6371;
-        const dL = (lat2 - lat1) * Math.PI / 180;
-        const dG = (lon2 - lon1) * Math.PI / 180;
-        const a  = Math.sin(dL / 2) * Math.sin(dL / 2)
-                 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
-                 * Math.sin(dG / 2) * Math.sin(dG / 2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    // ── Échappement HTML basique ───────────────────────────────────────────
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[c]);
     }
 
 })();

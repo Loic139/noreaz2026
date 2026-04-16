@@ -5,7 +5,21 @@ const flash         = require('connect-flash');
 const path          = require('path');
 const { version }   = require('./package.json');
 
+// ---- V\u00e9rifs d'environnement critiques ----
+if (!process.env.SESSION_SECRET) {
+    console.error('\u274c SESSION_SECRET manquant dans .env \u2014 arr\u00eat de l\'application.');
+    console.error('   G\u00e9n\u00e8re-le avec : openssl rand -hex 64');
+    process.exit(1);
+}
+if (!process.env.ADMIN_PASSWORD) {
+    console.warn('\u26a0\ufe0f  ADMIN_PASSWORD non d\u00e9fini \u2014 la connexion admin sera d\u00e9sactiv\u00e9e.');
+}
+
 const app = express();
+const isProd = process.env.NODE_ENV === 'production';
+
+// Indispensable si on est derri\u00e8re un reverse proxy (HTTPS termin\u00e9 en amont)
+if (isProd) app.set('trust proxy', 1);
 
 // ---- Moteur de vues ----
 app.set('view engine', 'ejs');
@@ -17,10 +31,16 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
-    secret:            process.env.SESSION_SECRET || 'noreaz_secret',
+    secret:            process.env.SESSION_SECRET,
     resave:            false,
     saveUninitialized: false,
-    cookie:            { maxAge: 7 * 24 * 60 * 60 * 1000 }, // 7 jours
+    name:              'noreaz.sid', // on ne divulgue pas le framework
+    cookie: {
+        httpOnly: true,            // non lisible en JS (anti-XSS sur le cookie)
+        secure:   isProd,          // HTTPS uniquement en prod
+        sameSite: 'lax',           // anti-CSRF basique
+        maxAge:   7 * 24 * 60 * 60 * 1000, // 7 jours
+    },
 }));
 
 app.use(flash());

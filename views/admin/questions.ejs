@@ -19,7 +19,9 @@
     <a href="/admin" class="btn btn-ghost btn-xs">Dashboard</a>
     <a href="/admin/monuments" class="btn btn-ghost btn-xs">Monuments</a>
     <a href="/admin/users" class="btn btn-ghost btn-xs">Joueurs</a>
-    <a href="/admin/logout" class="btn btn-ghost btn-xs text-error/60">Quitter</a>
+    <form method="post" action="/admin/logout" class="inline">
+      <button type="submit" class="btn btn-ghost btn-xs text-error/60">Quitter</button>
+    </form>
   </div>
 </div>
 
@@ -111,9 +113,12 @@
       <div class="flex gap-1 flex-shrink-0">
         <a href="/admin/questions?monument_id=<%= monument.id %>&edit=<%= q.id %>"
            class="btn btn-ghost btn-xs text-primary">Modifier</a>
-        <a href="/admin/questions/delete?id=<%= q.id %>&monument_id=<%= monument.id %>"
-           onclick="return confirm('Supprimer cette question ?')"
-           class="btn btn-ghost btn-xs text-error/60">Suppr.</a>
+        <form method="post" action="/admin/questions/delete" class="inline"
+              onsubmit="return confirm('Supprimer cette question ?')">
+          <input type="hidden" name="id" value="<%= q.id %>">
+          <input type="hidden" name="monument_id" value="<%= monument.id %>">
+          <button type="submit" class="btn btn-ghost btn-xs text-error/60">Suppr.</button>
+        </form>
       </div>
     </div>
   </div>

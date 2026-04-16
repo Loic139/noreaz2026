@@ -5,6 +5,28 @@ const crypto   = require('crypto');
 const db       = require('../config/db');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../config/mailer');
 
+// ---- Utilitaires ----
+const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function normalizeEmail(v) {
+    return String(v || '').trim().toLowerCase();
+}
+function isValidEmail(v) {
+    return EMAIL_RE.test(v) && v.length <= 254;
+}
+function buildSessionUser(u) {
+    // On ne laisse JAMAIS le hash password ou les tokens secrets entrer dans la session.
+    return {
+        id:             u.id,
+        first_name:     u.first_name,
+        last_name:      u.last_name,
+        email:          u.email,
+        email_verified: u.email_verified,
+        persistent_token: u.persistent_token,
+    };
+}
+
 // GET login
 router.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/');
@@ -16,15 +38,30 @@ router.get('/login', (req, res) => {
 
 // POST login
 router.post('/login', async (req, res) => {
-    const { email, password, redirect = '/' } = req.body;
-    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
-    const user   = rows[0];
+    const email    = normalizeEmail(req.body.email);
+    const password = req.body.password || '';
+    const redirect = req.body.redirect || '/';
+
+    // Requête restreinte : on ne charge que ce dont on a besoin
+    const [rows] = await db.query(
+        'SELECT id, first_name, last_name, email, email_verified, password FROM users WHERE email = ?',
+        [email]
+    );
+    const user = rows[0];
 
     if (user && await bcrypt.compare(password, user.password)) {
         const pt = crypto.randomBytes(32).toString('hex');
         await db.query('UPDATE users SET persistent_token = ? WHERE id = ?', [pt, user.id]);
-        req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: user.email_verified, persistent_token: pt };
-        return res.redirect(redirect);
+        // Régénération de l'ID de session pour éviter le session fixation
+        req.session.regenerate(err => {
+            if (err) {
+                req.flash('error', 'Erreur de session, réessaie.');
+                return res.redirect('/auth/login');
+            }
+            req.session.user = buildSessionUser({ ...user, persistent_token: pt });
+            res.redirect(redirect);
+        });
+        return;
     }
     req.flash('error', 'Email ou mot de passe incorrect.');
     res.redirect('/auth/login?redirect=' + encodeURIComponent(redirect));
@@ -41,14 +78,23 @@ router.get('/register', (req, res) => {
 
 // POST register
 router.post('/register', async (req, res) => {
-    const { first_name, last_name, email, password, confirm, redirect = '/' } = req.body;
+    const first_name = String(req.body.first_name || '').trim().slice(0, 80);
+    const last_name  = String(req.body.last_name  || '').trim().slice(0, 80);
+    const email      = normalizeEmail(req.body.email);
+    const password   = req.body.password || '';
+    const confirm    = req.body.confirm  || '';
+    const redirect   = req.body.redirect || '/';
 
     if (!first_name || !last_name || !email || !password) {
         req.flash('error', 'Tous les champs sont obligatoires.');
         return res.redirect('/auth/register?redirect=' + encodeURIComponent(redirect));
     }
-    if (password.length < 6) {
-        req.flash('error', 'Le mot de passe doit contenir au moins 6 caractères.');
+    if (!isValidEmail(email)) {
+        req.flash('error', 'Adresse e-mail invalide.');
+        return res.redirect('/auth/register?redirect=' + encodeURIComponent(redirect));
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+        req.flash('error', `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`);
         return res.redirect('/auth/register?redirect=' + encodeURIComponent(redirect));
     }
     if (password !== confirm) {
@@ -56,31 +102,39 @@ router.post('/register', async (req, res) => {
         return res.redirect('/auth/register?redirect=' + encodeURIComponent(redirect));
     }
 
-    const [exists] = await db.query('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
+    const [exists] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
     if (exists.length) {
         req.flash('error', 'Cette adresse e-mail est déjà utilisée.');
         return res.redirect('/auth/register?redirect=' + encodeURIComponent(redirect));
     }
 
-    const hash  = await bcrypt.hash(password, 12);
-    const token = crypto.randomBytes(32).toString('hex');
+    const hash    = await bcrypt.hash(password, 12);
+    const token   = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const [result] = await db.query(
         'INSERT INTO users (email, first_name, last_name, password, verification_token, token_expires_at) VALUES (?,?,?,?,?,?)',
-        [email.toLowerCase(), first_name, last_name, hash, token, expires]
+        [email, first_name, last_name, hash, token, expires]
     );
     const pt = crypto.randomBytes(32).toString('hex');
     await db.query('UPDATE users SET persistent_token = ? WHERE id = ?', [pt, result.insertId]);
-    req.session.user = { id: result.insertId, first_name, last_name, email: email.toLowerCase(), email_verified: 0, persistent_token: pt };
 
-    try {
-        await sendVerificationEmail(email.toLowerCase(), first_name, token);
-    } catch (e) {
-        console.error('Erreur envoi email:', e.message);
-    }
+    req.session.regenerate(err => {
+        if (err) {
+            req.flash('error', 'Erreur de session, reconnecte-toi.');
+            return res.redirect('/auth/login');
+        }
+        req.session.user = buildSessionUser({
+            id: result.insertId, first_name, last_name, email,
+            email_verified: 0, persistent_token: pt,
+        });
 
-    req.flash('success', 'Compte créé ! Vérifiez votre e-mail pour activer votre compte.');
-    res.redirect(redirect);
+        // envoi mail en "fire and forget" (pas besoin d'attendre)
+        sendVerificationEmail(email, first_name, token)
+            .catch(e => console.error('Erreur envoi email:', e.message));
+
+        req.flash('success', 'Compte créé ! Vérifiez votre e-mail pour activer votre compte.');
+        res.redirect(redirect);
+    });
 });
 
 // GET verify email
@@ -100,7 +154,7 @@ router.get('/verify/:token', async (req, res) => {
     );
     const pt = user.persistent_token || crypto.randomBytes(32).toString('hex');
     if (!user.persistent_token) await db.query('UPDATE users SET persistent_token = ? WHERE id = ?', [pt, user.id]);
-    req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: 1, persistent_token: pt };
+    req.session.user = buildSessionUser({ ...user, email_verified: 1, persistent_token: pt });
     req.flash('success', 'E-mail confirmé ! Bienvenue ' + user.first_name + ' !');
     res.redirect('/');
 });
@@ -153,16 +207,21 @@ router.post('/profile', async (req, res) => {
 
 // POST auto-login via persistent token (localStorage)
 router.post('/auto-login', async (req, res) => {
-    const { token } = req.body;
-    if (!token) return res.json({ ok: false });
+    const token = typeof req.body.token === 'string' ? req.body.token : '';
+    // Un token valide fait 64 chars hex (randomBytes(32)). On rejette tout ce qui ne matche pas.
+    if (!/^[a-f0-9]{64}$/i.test(token)) return res.json({ ok: false });
+
     const [rows] = await db.query(
         'SELECT id, first_name, last_name, email, email_verified, persistent_token FROM users WHERE persistent_token = ?',
         [token]
     );
     if (!rows.length) return res.json({ ok: false });
     const u = rows[0];
-    req.session.user = { id: u.id, first_name: u.first_name, last_name: u.last_name, email: u.email, email_verified: u.email_verified, persistent_token: u.persistent_token };
-    res.json({ ok: true });
+    req.session.regenerate(err => {
+        if (err) return res.json({ ok: false });
+        req.session.user = buildSessionUser(u);
+        res.json({ ok: true });
+    });
 });
 
 // GET forgot password
@@ -173,23 +232,25 @@ router.get('/forgot-password', (req, res) => {
 
 // POST forgot password
 router.post('/forgot-password', async (req, res) => {
-    const { email } = req.body;
-    const [rows] = await db.query('SELECT id, first_name FROM users WHERE email = ?', [email.toLowerCase()]);
+    const email = normalizeEmail(req.body.email);
 
-    // Même réponse si l'email existe ou non (sécurité)
+    // Même réponse dans tous les cas (anti-énumération)
     req.flash('success', 'Si cette adresse existe, un e-mail vous a été envoyé.');
 
-    if (rows.length) {
-        const token   = crypto.randomBytes(32).toString('hex');
-        const expires = new Date(Date.now() + 60 * 60 * 1000); // 1h
-        await db.query(
-            'UPDATE users SET reset_token = ?, reset_expires_at = ? WHERE id = ?',
-            [token, expires, rows[0].id]
-        );
-        try {
-            await sendPasswordResetEmail(email.toLowerCase(), rows[0].first_name, token);
-        } catch (e) {
-            console.error('Erreur envoi email reset:', e.message);
+    if (isValidEmail(email)) {
+        const [rows] = await db.query('SELECT id, first_name FROM users WHERE email = ?', [email]);
+        if (rows.length) {
+            const token   = crypto.randomBytes(32).toString('hex');
+            const expires = new Date(Date.now() + 60 * 60 * 1000); // 1h
+            await db.query(
+                'UPDATE users SET reset_token = ?, reset_expires_at = ? WHERE id = ?',
+                [token, expires, rows[0].id]
+            );
+            try {
+                await sendPasswordResetEmail(email, rows[0].first_name, token);
+            } catch (e) {
+                console.error('Erreur envoi email reset:', e.message);
+            }
         }
     }
     res.redirect('/auth/forgot-password');
@@ -223,8 +284,8 @@ router.post('/reset-password/:token', async (req, res) => {
         req.flash('error', 'Lien invalide ou expiré. Faites une nouvelle demande.');
         return res.redirect('/auth/forgot-password');
     }
-    if (!password || password.length < 6) {
-        req.flash('error', 'Le mot de passe doit contenir au moins 6 caractères.');
+    if (!password || password.length < MIN_PASSWORD_LENGTH) {
+        req.flash('error', `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`);
         return res.redirect(`/auth/reset-password/${req.params.token}`);
     }
     if (password !== confirm) {
@@ -233,22 +294,28 @@ router.post('/reset-password/:token', async (req, res) => {
     }
     const hash = await bcrypt.hash(password, 12);
     const user = rows[0];
+    // On invalide aussi tous les tokens persistants actifs (sécurité : changement de mdp = déconnexion partout)
     await db.query(
-        'UPDATE users SET password = ?, reset_token = NULL, reset_expires_at = NULL WHERE id = ?',
+        'UPDATE users SET password = ?, reset_token = NULL, reset_expires_at = NULL, persistent_token = NULL WHERE id = ?',
         [hash, user.id]
     );
-    req.session.user = { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, email_verified: 1 };
-    req.flash('success', 'Mot de passe mis à jour ! Vous êtes connecté.');
-    res.redirect('/');
+    req.session.regenerate(err => {
+        if (err) return res.redirect('/auth/login');
+        req.session.user = buildSessionUser({ ...user, email_verified: 1, persistent_token: null });
+        req.flash('success', 'Mot de passe mis à jour ! Vous êtes connecté.');
+        res.redirect('/');
+    });
 });
 
 // GET logout
-router.get('/logout', async (req, res) => {
+router.post('/logout', async (req, res) => {
     if (req.session.user) {
         await db.query('UPDATE users SET persistent_token = NULL WHERE id = ?', [req.session.user.id]);
     }
-    req.session.destroy();
-    res.redirect('/');
+    req.session.destroy(() => {
+        res.clearCookie('noreaz.sid');
+        res.redirect('/');
+    });
 });
 
 module.exports = router;

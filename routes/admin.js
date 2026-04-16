@@ -6,7 +6,7 @@ const { requireAdmin } = require('../middleware/auth');
 const upload     = require('../middleware/upload');
 const crypto     = require('crypto');
 const path       = require('path');
-const fs         = require('fs');
+const fsp        = require('fs').promises;
 
 // ---- Login ----
 router.get('/login', (req, res) => {
@@ -15,7 +15,12 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', (req, res) => {
-    if (req.body.password === (process.env.ADMIN_PASSWORD || 'noreaz2026admin')) {
+    if (!process.env.ADMIN_PASSWORD) {
+        console.error('[admin] ADMIN_PASSWORD non défini dans .env — connexion admin désactivée.');
+        req.flash('error', 'Configuration serveur invalide.');
+        return res.redirect('/admin/login');
+    }
+    if (req.body.password === process.env.ADMIN_PASSWORD) {
         req.session.isAdmin = true;
         return res.redirect('/admin');
     }
@@ -23,9 +28,11 @@ router.post('/login', (req, res) => {
     res.redirect('/admin/login');
 });
 
-router.get('/logout', (req, res) => {
-    req.session.isAdmin = false;
-    res.redirect('/admin/login');
+router.post('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.clearCookie('noreaz.sid');
+        res.redirect('/admin/login');
+    });
 });
 
 // Toutes les routes suivantes nécessitent d'être admin
@@ -93,7 +100,7 @@ router.post('/monuments/add', upload.single('image'), async (req, res) => {
         const ext     = path.extname(req.file.originalname).toLowerCase();
         const newName = 'monument_' + result.insertId + ext;
         const dest    = path.join(__dirname, '../public/img/monuments', newName);
-        fs.renameSync(req.file.path, dest);
+        await fsp.rename(req.file.path, dest);
         await db.query('UPDATE monuments SET image=? WHERE id=?', [newName, result.insertId]);
     }
 
@@ -109,19 +116,19 @@ router.post('/monuments/:id/upload', (req, res, next) => {
         const ext = path.extname(req.file.originalname).toLowerCase();
         const filename = 'monument_' + id + ext;
         const dest = path.join(__dirname, '../public/img/monuments', filename);
-        fs.renameSync(req.file.path, dest);
+        await fsp.rename(req.file.path, dest);
         await db.query('UPDATE monuments SET image=? WHERE id=?', [filename, id]);
         res.redirect('/admin/monuments?msg=Photo+mise+à+jour');
     });
 });
 
-router.get('/monuments/:id/toggle', async (req, res) => {
+router.post('/monuments/:id/toggle', async (req, res) => {
     const [[m]] = await db.query('SELECT active FROM monuments WHERE id=?', [req.params.id]);
     if (m) await db.query('UPDATE monuments SET active=? WHERE id=?', [m.active ? 0 : 1, req.params.id]);
     res.redirect('/admin/monuments');
 });
 
-router.get('/monuments/:id/delete', async (req, res) => {
+router.post('/monuments/:id/delete', async (req, res) => {
     await db.query('DELETE FROM monuments WHERE id=?', [req.params.id]);
     res.redirect('/admin/monuments');
 });
@@ -176,8 +183,8 @@ router.post('/questions/edit', async (req, res) => {
     res.redirect('/admin/questions?monument_id=' + monument_id);
 });
 
-router.get('/questions/delete', async (req, res) => {
-    const { id, monument_id } = req.query;
+router.post('/questions/delete', async (req, res) => {
+    const { id, monument_id } = req.body;
     await db.query('DELETE FROM questions WHERE id=? AND monument_id=?', [id, monument_id]);
     res.redirect('/admin/questions?monument_id=' + monument_id);
 });
@@ -193,12 +200,13 @@ router.get('/users', async (req, res) => {
     res.render('admin/users', { pageTitle: 'Admin — Joueurs', users });
 });
 
-router.get('/users/:id/reset', async (req, res) => {
+router.post('/users/:id/reset', async (req, res) => {
     await db.query('DELETE FROM scores WHERE user_id=?', [req.params.id]);
+    await db.query('DELETE FROM geo_scores WHERE user_id=?', [req.params.id]).catch(() => {});
     res.redirect('/admin/users');
 });
 
-router.get('/users/:id/delete', async (req, res) => {
+router.post('/users/:id/delete', async (req, res) => {
     await db.query('DELETE FROM users WHERE id=?', [req.params.id]);
     res.redirect('/admin/users');
 });

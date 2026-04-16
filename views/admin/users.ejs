@@ -19,7 +19,9 @@
     <a href="/admin" class="btn btn-ghost btn-xs">Dashboard</a>
     <a href="/admin/monuments" class="btn btn-ghost btn-xs">Monuments</a>
     <a href="/admin/users" class="btn btn-ghost btn-xs">Joueurs</a>
-    <a href="/admin/logout" class="btn btn-ghost btn-xs text-error/60">Quitter</a>
+    <form method="post" action="/admin/logout" class="inline">
+      <button type="submit" class="btn btn-ghost btn-xs text-error/60">Quitter</button>
+    </form>
   </div>
 </div>
 
@@ -52,12 +54,14 @@
         </td>
         <td>
           <div class="flex gap-1">
-            <a href="/admin/users/<%= u.id %>/reset"
-               onclick="return confirm('Remettre à zéro les scores ?')"
-               class="btn btn-ghost btn-xs text-warning/70">Reset</a>
-            <a href="/admin/users/<%= u.id %>/delete"
-               onclick="return confirm('Supprimer ce joueur ?')"
-               class="btn btn-ghost btn-xs text-error/60">Suppr.</a>
+            <form method="post" action="/admin/users/<%= u.id %>/reset" class="inline"
+                  onsubmit="return confirm('Remettre à zéro les scores ?')">
+              <button type="submit" class="btn btn-ghost btn-xs text-warning/70">Reset</button>
+            </form>
+            <form method="post" action="/admin/users/<%= u.id %>/delete" class="inline"
+                  onsubmit="return confirm('Supprimer ce joueur ?')">
+              <button type="submit" class="btn btn-ghost btn-xs text-error/60">Suppr.</button>
+            </form>
           </div>
         </td>
       </tr>

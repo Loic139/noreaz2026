@@ -19,7 +19,9 @@
     <a href="/admin" class="btn btn-ghost btn-xs">Dashboard</a>
     <a href="/admin/monuments" class="btn btn-ghost btn-xs">Monuments</a>
     <a href="/admin/users" class="btn btn-ghost btn-xs">Joueurs</a>
-    <a href="/admin/logout" class="btn btn-ghost btn-xs text-error/60">Quitter</a>
+    <form method="post" action="/admin/logout" class="inline">
+      <button type="submit" class="btn btn-ghost btn-xs text-error/60">Quitter</button>
+    </form>
   </div>
 </div>
 
@@ -109,12 +111,15 @@
               <input type="file" id="img-<%= m.id %>" name="image" accept="image/jpeg,image/png,image/webp"
                      class="hidden" onchange="document.getElementById('uf-<%= m.id %>').submit()">
             </form>
-            <a href="/admin/monuments/<%= m.id %>/toggle" class="btn btn-ghost btn-xs">
-              <%= m.active ? 'Désact.' : 'Act.' %>
-            </a>
-            <a href="/admin/monuments/<%= m.id %>/delete"
-               onclick="return confirm('Supprimer ce monument ?')"
-               class="btn btn-ghost btn-xs text-error/60">Suppr.</a>
+            <form method="post" action="/admin/monuments/<%= m.id %>/toggle" class="inline">
+              <button type="submit" class="btn btn-ghost btn-xs">
+                <%= m.active ? 'Désact.' : 'Act.' %>
+              </button>
+            </form>
+            <form method="post" action="/admin/monuments/<%= m.id %>/delete" class="inline"
+                  onsubmit="return confirm('Supprimer ce monument ?')">
+              <button type="submit" class="btn btn-ghost btn-xs text-error/60">Suppr.</button>
+            </form>
           </div>
         </td>
       </tr>
