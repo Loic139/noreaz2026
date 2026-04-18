@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bordeaux: #8C2333;
+            --bordeaux-dark: #6b1b27;
+            --ink: #1A1A1A;
+            --ink-soft: #555;
+            --paper: #FFFFFF;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--ink);
+            background: #e5e5e5;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* ---- Barre de contrôle (non imprimée) ---- */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #222;
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,.2);
+        }
+        .toolbar h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.1rem;
+            margin: 0;
+            letter-spacing: .05em;
+        }
+        .toolbar a, .toolbar button {
+            font-family: 'Inter', sans-serif;
+            font-size: .85rem;
+            border: none;
+            background: var(--bordeaux);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 8px;
+        }
+        .toolbar .btn-ghost {
+            background: transparent;
+            border: 1px solid #555;
+        }
+
+        /* ---- Pages ---- */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 16px auto;
+            background: var(--paper);
+            box-shadow: 0 2px 12px rgba(0,0,0,.15);
+            padding: 12mm;
+            display: flex;
+            flex-direction: column;
+            gap: 8mm;
+            page-break-after: always;
+        }
+        .page:last-child { page-break-after: auto; }
+
+        /* ---- Carte ---- */
+        .card {
+            flex: 1;
+            border: 2px dashed #bbb;
+            border-radius: 6mm;
+            padding: 8mm 10mm;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8mm;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(135deg, #fafafa 0%, #fff 100%);
+        }
+
+        /* Accent bordeaux en haut à gauche */
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 60mm;
+            height: 8mm;
+            background: var(--bordeaux);
+            border-top-left-radius: 6mm;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4mm;
+            padding-top: 4mm;
+            min-width: 0; /* pour éviter overflow sur noms longs */
+        }
+
+        .heading {
+            font-family: 'Oswald', sans-serif;
+            color: var(--ink);
+            font-weight: 600;
+            line-height: 1.15;
+            font-size: 18pt;
+            margin: 0;
+        }
+        .monument-name {
+            font-family: 'Oswald', sans-serif;
+            color: var(--bordeaux);
+            font-weight: 700;
+            font-size: 26pt;
+            line-height: 1.1;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: .01em;
+        }
+
+        .intro {
+            font-size: 10.5pt;
+            line-height: 1.45;
+            color: var(--ink);
+            margin: 0;
+        }
+        .intro strong { color: var(--bordeaux); }
+
+        .scan-label {
+            font-family: 'Oswald', sans-serif;
+            font-size: 12pt;
+            font-weight: 600;
+            color: var(--ink);
+            margin: 0;
+            letter-spacing: .02em;
+        }
+        .bullets {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+            font-size: 10pt;
+            color: var(--ink);
+            line-height: 1.5;
+        }
+        .bullets li {
+            padding-left: 14pt;
+            position: relative;
+        }
+        .bullets li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--bordeaux);
+            font-weight: bold;
+        }
+
+        .note {
+            font-size: 9pt;
+            color: var(--ink-soft);
+            font-style: italic;
+            margin: 0;
+            border-top: 1px solid #ddd;
+            padding-top: 3mm;
+        }
+
+        /* ---- Bloc QR ---- */
+        .qr-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3mm;
+            padding: 4mm;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 4mm;
+        }
+        .qr-block img {
+            width: 50mm;
+            height: 50mm;
+            display: block;
+        }
+        .qr-caption {
+            font-size: 8pt;
+            color: var(--ink-soft);
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+        }
+
+        /* ---- Footer / logo ---- */
+        .card-footer {
+            position: absolute;
+            bottom: 4mm;
+            right: 8mm;
+            font-family: 'Oswald', sans-serif;
+            font-size: 8pt;
+            color: var(--ink-soft);
+            letter-spacing: .15em;
+        }
+        .card-footer strong {
+            color: var(--bordeaux);
+        }
+
+        /* ---- Impression ---- */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        @media print {
+            html, body { background: #fff; }
+            .toolbar { display: none !important; }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .card {
+                border-style: dashed;
+                border-color: #aaa;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Barre non imprimable -->
+<div class="toolbar">
+    <h1>🖨️ Cartes à imprimer — <%= total %> monument<%= total > 1 ? 's' : '' %></h1>
+    <div>
+        <a href="/admin" class="btn-ghost">← Retour admin</a>
+        <button onclick="window.print()">Imprimer (Ctrl+P)</button>
+    </div>
+</div>
+
+<% if (!cards.length) { %>
+<div style="text-align:center;padding:80px;color:#555">
+    Aucun monument actif. Ajoute ou active des monuments depuis l'admin.
+</div>
+<% } %>
+
+<!-- Une page A4 par paire de cartes -->
+<% for (let i = 0; i < cards.length; i += 2) { %>
+<div class="page">
+    <% for (let j = i; j < i + 2 && j < cards.length; j++) { %>
+    <% const c = cards[j]; %>
+    <div class="card">
+        <div class="card-content">
+            <p class="heading">🏛️ Tu as trouvé :</p>
+            <h2 class="monument-name"><%= c.name %> !</h2>
+            <p class="intro">
+                Bravo ! Tu viens de dénicher l'un des <strong>10 monuments miniatures</strong>
+                cachés à l'occasion du <strong>28ᵉ Giron des Jeunesses Sarinoises</strong>
+                à Noréaz, du 24 au 28 juin 2026.
+            </p>
+            <p class="scan-label">📱 Scanne le QR code pour jouer :</p>
+            <ul class="bullets">
+                <li>Un quiz de 5 questions sur le monument</li>
+                <li>Un géo-quiz pour le placer sur la carte du monde</li>
+                <li>Gagne des points et monte dans le classement 🏆</li>
+            </ul>
+            <p class="note">
+                🙏 Laisse la statuette à sa place, d'autres chercheurs veulent encore la trouver !
+            </p>
+        </div>
+        <div class="qr-block">
+            <img src="<%= c.qr %>" alt="QR code">
+            <div class="qr-caption">Scanne-moi</div>
+        </div>
+        <div class="card-footer">
+            <strong>NORÉAZ</strong> 2026
+        </div>
+    </div>
+    <% } %>
+
+    <% if (i + 1 >= cards.length) { %>
+        <!-- Une seule carte sur cette page : on garde l'espace en bas vide -->
+        <div style="flex:1"></div>
+    <% } %>
+</div>
+<% } %>
+
+</body>
+</html>

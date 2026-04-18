@@ -211,4 +211,29 @@ router.post('/users/:id/delete', async (req, res) => {
     res.redirect('/admin/users');
 });
 
+// ---- Cartes imprimables (QR + texte à poser à côté de chaque statuette) ----
+router.get('/print-cards', async (req, res) => {
+    const [monuments] = await db.query(
+        'SELECT id, name, qr_token FROM monuments WHERE active = 1 ORDER BY id'
+    );
+
+    const appUrl = process.env.APP_URL || '';
+    const cards = await Promise.all(monuments.map(async m => {
+        const url    = `${appUrl}/monument?token=${m.qr_token}`;
+        const qrData = await qrcode.toDataURL(url, {
+            width:  500,
+            margin: 1,
+            color:  { dark: '#1A1A1A', light: '#FFFFFF' },
+            errorCorrectionLevel: 'M',
+        });
+        return { name: m.name, url, qr: qrData };
+    }));
+
+    res.render('admin/print-cards', {
+        pageTitle: 'Cartes à imprimer — Noréaz 2026',
+        cards,
+        total: cards.length,
+    });
+});
+
 module.exports = router;
