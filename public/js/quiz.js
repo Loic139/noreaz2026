@@ -179,7 +179,7 @@
             } else if (score > 0) {
                 resultMsg.textContent = 'Pas mal, mais tu peux faire mieux la prochaine fois !';
             } else {
-                resultMsg.textContent = 'Dommage... Continue d\'explorer le village !';
+                resultMsg.textContent = 'Dommage... Continue d\'explorer le district !';
             }
         }
 
@@ -202,7 +202,7 @@
         const monument = window.MONUMENT_NAME || 'un monument';
         const url      = window.SHARE_URL     || 'https://noreaz.digitme.fun';
 
-        const text = `🏛️ J'ai trouvé ${monument} miniature caché dans le village de Noréaz `
+        const text = `🏛️ J'ai trouvé ${monument} miniature caché dans le district de la Sarine `
                    + `et j'ai marqué ${score}/${total} au quiz !\n`
                    + `🎉 Viens jouer toi aussi au 28e Giron des Jeunesses Sarinoises — 24-28 juin 2026 👇`;
 
